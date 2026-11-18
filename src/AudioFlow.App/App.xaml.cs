@@ -11,6 +11,10 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        if (e.Args.Length == 2 && e.Args[0] == "--verify-onboarding")
+        {
+            _ = VerifyOnboardingAsync(e.Args[1]); return;
+        }
         if (e.Args.Length == 2 && e.Args[0] == "--verify-settings")
         {
             _ = VerifySettingsAsync(e.Args[1]); return;
@@ -74,6 +78,11 @@ public partial class App : Application
     {
         try { await SettingsChecks.RunAsync(directory); Shutdown(0); }
         catch (Exception error) { Directory.CreateDirectory(directory); File.WriteAllText(Path.Combine(directory, "settings-error.log"), error.ToString()); Shutdown(1); }
+    }
+    private async Task VerifyOnboardingAsync(string directory)
+    {
+        try { await GettingStartedChecks.RunAsync(directory); Shutdown(0); }
+        catch (Exception error) { Directory.CreateDirectory(directory); File.WriteAllText(Path.Combine(directory, "onboarding-error.log"), error.ToString()); Shutdown(1); }
     }
     private async Task VerifyStartupAsync(string directory, string report)
     {

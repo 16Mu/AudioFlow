@@ -102,6 +102,7 @@
   <sys:Double x:Key="FontSize.Title">16</sys:Double>
   <sys:Double x:Key="FontSize.Section">18</sys:Double>
   <sys:Double x:Key="FontSize.Heading">22</sys:Double>
+  <sys:Double x:Key="FontSize.Hero">28</sys:Double>
   <CornerRadius x:Key="Radius.Window">14</CornerRadius>
   <CornerRadius x:Key="Radius.Card">18</CornerRadius>
   <CornerRadius x:Key="Radius.Control">10</CornerRadius>

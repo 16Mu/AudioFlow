@@ -42,7 +42,16 @@ public partial class MainWindow : Window
             if (verification) return;
             tray = new(this);
             await ViewModel.InitializeAsync();
+            if (!closing && IsVisible) ShowFirstRunGuide();
         };
+    }
+    internal bool ShowFirstRunGuide(Action<GettingStartedWindow>? prepare = null, Action<Uri>? openLink = null, Func<Window?, string>? installDriver = null)
+    {
+        if (!new GettingStartedState(ViewModel.Store.DataDirectory).NeedsGuide) return false;
+        var guide = new GettingStartedWindow(ViewModel, openLink, installDriver) { Owner = this };
+        prepare?.Invoke(guide);
+        guide.ShowDialog();
+        return true;
     }
     private LayoutCard MeasureLayoutCard(NodeViewModel node)
     {

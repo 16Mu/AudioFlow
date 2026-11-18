@@ -23,17 +23,26 @@ Windows 11 上的节点式软件音频路由器。支持每个应用到任意多
 
 ## 下载
 
-当前版本 [v0.01](https://github.com/16Mu/AudioFlow/releases/tag/v0.01)，适用于 Windows 11 x64。
+当前版本 [v0.02](https://github.com/16Mu/AudioFlow/releases/tag/v0.02)，适用于 Windows 11 x64。
 
-- [MSI 安装包](https://github.com/16Mu/AudioFlow/releases/download/v0.01/AudioFlow-0.01-x64.msi)
-- [便携 ZIP](https://github.com/16Mu/AudioFlow/releases/download/v0.01/AudioFlow-0.01-portable.zip)：解压后打开 `portable/AudioFlow.exe`。
-- [源码 ZIP](https://github.com/16Mu/AudioFlow/releases/download/v0.01/AudioFlow-0.01-source.zip)
+- [MSI 安装包](https://github.com/16Mu/AudioFlow/releases/download/v0.02/AudioFlow-0.02-x64.msi)
+- [便携 ZIP](https://github.com/16Mu/AudioFlow/releases/download/v0.02/AudioFlow-0.02-portable.zip)：解压后打开 `portable/AudioFlow.exe`。
+- [源码 ZIP](https://github.com/16Mu/AudioFlow/releases/download/v0.02/AudioFlow-0.02-source.zip)
 
 运行前安装 [.NET 10 桌面运行时（x64）](https://dotnet.microsoft.com/download/dotnet/10.0)。
 虚拟麦克风需要自行安装兼容的虚拟音频驱动，详见使用说明。
 更新内容见 [发布说明](docs/发布说明.md)，验证结果与限制见 [验证报告](docs/验证报告.md)。
 
 ![声流 AudioFlow 界面预览](docs/images/preview.png)
+
+## 首次使用
+
+首次打开会显示三步引导：认识声流、学习连接声音、按需要准备虚拟音频驱动。
+可以选择“跳过引导，先看看”或“暂不安装，先看看”，之后不会重复弹出。
+在设置中点击“查看新手引导”可以重新打开；“驱动下载与安装”提供 VB-CABLE 和 Hi-Fi CABLE 的官方下载按钮、已检测状态及安装入口。
+只调整软件的播放去向可以直接使用。需要软件间的麦克风输入时，再下载并完整解压官方 ZIP，点击“安装已下载的驱动…”选择其中的安装程序，完成后重新检测设备。
+
+![新手引导中的驱动下载与安装](docs/images/getting-started-drivers.png)
 
 ## 构建
 
@@ -44,7 +53,7 @@ Windows 11 上的节点式软件音频路由器。支持每个应用到任意多
     dotnet tool restore
     .\scripts\build.ps1 -Verify
 
-公开版本 v0.01。构建输出为 dist\AudioFlow-0.01：MSI、便携 ZIP、源码 ZIP、使用说明、发布说明与校验文件。
+公开版本 v0.02。构建输出为 dist\AudioFlow-0.02：MSI、便携 ZIP、源码 ZIP、使用说明、发布说明与校验文件。
 发布为框架依赖的 .NET 10 软件，不在项目内安装运行时副本。
 旧版含 Mode 与两份画布配置的工作区会先保存 workspace.json.pre-migration，再合并为共享配置。
 
@@ -58,6 +67,11 @@ Windows 11 上的节点式软件音频路由器。支持每个应用到任意多
     .\tests\AudioFlow.Verification\bin\Release\net10.0-windows10.0.22000.0\AudioFlow.Verification.exe --unit
     .\tests\AudioFlow.Verification\bin\Release\net10.0-windows10.0.22000.0\AudioFlow.Verification.exe --channel-tests
     .\tests\AudioFlow.Verification\bin\Release\net10.0-windows10.0.22000.0\AudioFlow.Verification.exe --live 1800
+
+新手引导与设置检查：
+
+    .\src\AudioFlow.App\bin\Release\net10.0-windows10.0.22000.0\win-x64\AudioFlow.exe --verify-onboarding .cache\onboarding-check
+    .\src\AudioFlow.App\bin\Release\net10.0-windows10.0.22000.0\win-x64\AudioFlow.exe --verify-settings .cache\settings-check
 
 界面验证使用 --verify-ui <报告目录>，会启动自有测试音程序并走实际退出与还原流程，
 同时验证已关闭应用重开、无音频会话时保留恢复记录及退出后的恢复助手。

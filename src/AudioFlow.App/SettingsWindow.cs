@@ -1,6 +1,5 @@
 using AudioFlow.Audio;
 using AudioFlow.Core;
-using System.Diagnostics;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -17,7 +16,8 @@ public sealed class SettingsWindow : Window
     private readonly TextBlock counts = new() { Margin = new(0, 10, 0, 8), TextWrapping = TextWrapping.Wrap };
     private readonly TextBlock result = new() { Margin = new(0, 12, 0, 0), Foreground = Theme.Brush("Accent.Success") };
     private bool testing;
-    public SettingsWindow(MainViewModel model)
+    public SettingsWindow(MainViewModel model) : this(model, null, null, null) { }
+    internal SettingsWindow(MainViewModel model, Action<GettingStartedWindow>? prepareGuide, Action<Uri>? openLink, Func<Window?, string>? installDriver)
     {
         this.model = model;
         SetResourceReference(StyleProperty, typeof(Window));
@@ -28,6 +28,22 @@ public sealed class SettingsWindow : Window
         panel.Children.Add(new TextBlock { Text = "音频设备与虚拟麦克风", FontSize = 23, FontWeight = FontWeights.SemiBold });
         Theme.Use(counts, TextBlock.ForegroundProperty, "Accent.Output"); panel.Children.Add(counts);
         panel.Children.Add(new TextBlock { Text = "播放设备用于把声音送到耳机、扬声器或虚拟播放端；独立虚拟麦克风必须有配对的播放端和录音端。播放输出数量不等于虚拟麦克风路数。", Margin = new(0, 0, 0, 16), Foreground = Theme.Brush("Text.Secondary") });
+        var driverDownloads = new DriverDownloadsPanel(model, openLink, installDriver) { Name = "SettingsDriverDownloads" };
+        var guideSection = new StackPanel();
+        guideSection.Children.Add(GuideUi.Text("第一次用？从这里开始", "Title", "Text.Primary"));
+        var guideCopy = GuideUi.Text("了解声流、学会连线，或按需要准备虚拟麦克风驱动。"); guideCopy.Margin = new(0, 8, 0, 12);
+        guideSection.Children.Add(guideCopy);
+        var guideActions = new WrapPanel();
+        var reopenGuide = GuideUi.Button("查看新手引导", "ReopenGettingStarted");
+        reopenGuide.Click += (_, _) =>
+        {
+            var guide = new GettingStartedWindow(model, openLink, installDriver) { Owner = this };
+            prepareGuide?.Invoke(guide); guide.ShowDialog();
+        };
+        var jumpToDrivers = GuideUi.Button("↓  驱动下载与安装", "ShowDriverDownloads");
+        jumpToDrivers.Click += (_, _) => driverDownloads.BringIntoView();
+        guideActions.Children.Add(reopenGuide); guideActions.Children.Add(jumpToDrivers); guideSection.Children.Add(guideActions);
+        var guideCard = GuideUi.Card(guideSection); guideCard.Margin = new(0, 0, 0, 20); panel.Children.Add(guideCard);
         panel.Children.Add(new TextBlock { Text = "独立虚拟麦克风", FontSize = 17, FontWeight = FontWeights.SemiBold, Margin = new(0, 0, 0, 8) });
         panel.Children.Add(channels);
         var bar = new StackPanel { Orientation = Orientation.Horizontal, Margin = new(0, 12, 0, 12) };
@@ -41,12 +57,9 @@ public sealed class SettingsWindow : Window
         panel.Children.Add(result);
         panel.Children.Add(new TextBlock { Text = "可用播放设备", FontSize = 17, FontWeight = FontWeights.SemiBold, Margin = new(0, 14, 0, 8) });
         panel.Children.Add(playbackDevices);
-        panel.Children.Add(new TextBlock { Text = "获取免费虚拟音频设备", FontSize = 16, FontWeight = FontWeights.SemiBold, Margin = new(0, 20, 0, 8) });
-        panel.Children.Add(new TextBlock { Text = "当前已安装的独立设备对决定路数。新增虚拟驱动后重新检测，已知设备自动加入，未知设备可手动绑定并测试；没有额外录音端时，增加播放设备不能增加独立麦克风。驱动安装和许可遵循原厂要求。", Foreground = Theme.Brush("Text.Secondary"), FontSize = 12 });
-        var links = new StackPanel { Orientation = Orientation.Horizontal, Margin = new(0, 12, 0, 16) };
-        LinkButton(links, "VB-Audio 官方下载", "https://vb-audio.com/Cable/");
-        LinkButton(links, "Voicemeeter Banana", "https://vb-audio.com/Voicemeeter/banana.htm");
-        panel.Children.Add(links);
+        panel.Children.Add(new TextBlock { Text = "驱动下载与安装", FontSize = 17, FontWeight = FontWeights.SemiBold, Margin = new(0, 20, 0, 8) });
+        panel.Children.Add(GuideUi.Text("只调整播放去向无需安装。需要把软件声音送入其他软件的麦克风时，再选择下面的官方驱动；已有设备会自动检测。"));
+        driverDownloads.Margin = new(0, 0, 0, 22); panel.Children.Add(driverDownloads);
         var close = new CheckBox { Content = "关闭窗口时保留在托盘并继续路由（默认关闭窗口会退出并恢复声音）", IsChecked = model.CloseToTray };
         close.Checked += (_, _) => model.CloseToTray = true; close.Unchecked += (_, _) => model.CloseToTray = false;
         panel.Children.Add(close);
@@ -108,12 +121,6 @@ public sealed class SettingsWindow : Window
         playbackDevices.Children.Clear();
         foreach (var device in model.Catalog.Endpoints.Where(e => !e.Capture))
             playbackDevices.Children.Add(new TextBlock { Text = device.Name + (device.Default ? " · Windows 默认" : "") + (device.Virtual ? " · 虚拟播放端" : " · 播放输出"), Foreground = Theme.Brush("Text.Primary"), Margin = new(0, 0, 0, 7), FontSize = 12 });
-    }
-    private static void LinkButton(Panel parent, string text, string url)
-    {
-        var button = new Button { Content = text };
-        button.Click += (_, _) => Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
-        parent.Children.Add(button);
     }
     private void AddManualPair()
     {
