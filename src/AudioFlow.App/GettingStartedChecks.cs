@@ -67,13 +67,14 @@ internal static class GettingStartedChecks
                 Check(current.Step == 0, "the desktop first-run entry starts with the product introduction");
                 UiChecks.SavePreview(current, Path.Combine(directory, "guide-01-welcome.png"), 1040, 740);
                 Click(current, "GuideNext");
-                Check(current.Step == 1, "Next opens the four-step connection tutorial");
+                Check(current.Step == 1 && Children(current).OfType<SimulatedPracticePanel>().Any() && !((Button)current.FindName("GuideNext")).IsEnabled,
+                    "Next opens an in-wizard simulation that waits for the user's practice");
                 UiChecks.SavePreview(current, Path.Combine(directory, "guide-02-connect.png"), 1040, 740);
                 Click(current, "GuidePrevious");
                 Check(current.Step == 0, "Back returns to the introduction");
-                Click(current, "GuideNext"); Click(current, "GuideNext");
+                Click(current, "GuideNext"); Click(current, "GuideStep2");
                 Check(current.Step == 2, "the third page provides optional driver preparation");
-                Check(Children(current).OfType<TextBlock>().Any(t => t.Text.Contains("未检测到配对设备")),
+                Check(Children(current).OfType<TextBlock>().Any(t => t.Text.Contains("还没找到设备")),
                     "a profile without virtual audio devices sees an explicit optional-install state");
                 Check(openedLinks.Count == 0 && installerSelections == 0, "browsing all three pages leaves downloads and installation under user control");
                 UiChecks.SavePreview(current, Path.Combine(directory, "guide-03-drivers.png"), 1040, 740);

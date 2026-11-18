@@ -24,9 +24,9 @@ public sealed class SceneStore
         var actual = path ?? ScenePath;
         if (!File.Exists(actual)) return new();
         if (new FileInfo(actual).Length > 2 * 1024 * 1024)
-            throw new GraphValidationException("场景文件超过 2 MB。");
+            throw new GraphValidationException("声音设置文件太大了（超过 2 MB），请换一个文件。");
         var graph = JsonSerializer.Deserialize<RouteGraph>(File.ReadAllText(actual), JsonOptions)
-            ?? throw new GraphValidationException("场景文件为空。");
+            ?? throw new GraphValidationException("这个声音设置文件是空的，请换一个文件。");
         GraphCompiler.Compile(graph, []);
         return graph;
     }

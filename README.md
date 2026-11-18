@@ -1,96 +1,102 @@
+<img src="src/AudioFlow.App/Assets/app-icon.png" width="64" alt="声流标志">
+
 # 声流 AudioFlow
 
-Windows 11 上的节点式软件音频路由器。支持每个应用到任意多个输出、
-两路独立虚拟麦克风、真实麦克风混入、撤销与场景保存。播放去向由连线决定。
-单软件配置和全局画布共享同一张路由图，分别用于查看相关卡片与全部卡片。
-任一视图的修改都会同步，切换视图不改变正在执行的声音路由。
-运行区只有开启／停止声音路由，视图选择独立；运行中的连线、音量与静音修改实时生效。
-支持打开、保存、另存为和自动保存当前文件；停止后仍可编辑，重开恢复上次文件和开停状态。
-应用列表用于配置导航；画布右键添加卡片，卡片内选择具体软件或设备。
-左侧优先显示正在使用音频的应用，并保留已配置、手动添加及有音频会话证据的应用。
-其他应用可按名称搜索，在三列卡片网格中手动添加。
-单软件配置固定当前软件卡片，并显示它独有的默认输出卡片和受保护连线。
-在默认输出卡片中更换设备会改变这个软件的原声输出；新增播放设备连接复制声音。
-默认输出下拉框提供“不进行输出”，与“输出到所选设备”开关同步；其他输出继续运行。
-开关状态会保存，重新开启会保留设备和连线音量。
-卡片支持各条输入／输出连接的独立音量，扬声器设备音量与 Windows 双向同步。
-普通输入端可拖线改接，保留原音量；双击普通连接线或音量行的“×”可断开。
-当前软件、默认输出卡片及默认连线受保护；额外添加的软件和设备可自由配置。
-关闭窗口默认退出并自动还原声流介入前的声音设置；界面和托盘均提供“恢复原有状态”。
-已关闭应用的恢复记录会保留，重新播放时自动还原；退出后的临时恢复助手完成剩余还原即退出。
+**想在哪听，就把软件连到哪里。**
 
-运行说明见 [使用说明](docs/使用说明.md)。
+让音乐软件使用耳机、游戏使用扬声器，或让一个软件同时在多个设备播放。也能把音乐、游戏声和你的讲话，一起传给聊天、录音或直播软件。
 
-## 下载
+适用于 **Windows 11，64 位电脑**。声音和设置都留在你的电脑上。
 
-当前版本 [v0.02](https://github.com/16Mu/AudioFlow/releases/tag/v0.02)，适用于 Windows 11 x64。
+[下载安装版](https://github.com/16Mu/AudioFlow/releases/download/v0.03/AudioFlow-0.03-x64.msi) · [下载免安装版](https://github.com/16Mu/AudioFlow/releases/download/v0.03/AudioFlow-0.03-portable.zip) · [查看全部下载](https://github.com/16Mu/AudioFlow/releases/tag/v0.03)
 
-- [MSI 安装包](https://github.com/16Mu/AudioFlow/releases/download/v0.02/AudioFlow-0.02-x64.msi)
-- [便携 ZIP](https://github.com/16Mu/AudioFlow/releases/download/v0.02/AudioFlow-0.02-portable.zip)：解压后打开 `portable/AudioFlow.exe`。
-- [源码 ZIP](https://github.com/16Mu/AudioFlow/releases/download/v0.02/AudioFlow-0.02-source.zip)
+## 软件长什么样
 
-运行前安装 [.NET 10 桌面运行时（x64）](https://dotnet.microsoft.com/download/dotnet/10.0)。
-虚拟麦克风需要自行安装兼容的虚拟音频驱动，详见使用说明。
-更新内容见 [发布说明](docs/发布说明.md)，验证结果与限制见 [验证报告](docs/验证报告.md)。
+每张卡片代表一个软件或设备。把软件右边的圆点拖到设备左边的圆点，声音就有了去处。下面是一个软件连接两个播放设备的示例。
 
-![声流 AudioFlow 界面预览](docs/images/preview.png)
+![声流连接页面：一个软件可以同时连接两个播放设备](docs/images/overview.png)
 
-## 首次使用
+## 可以拿来做什么
 
-首次打开会显示三步引导：认识声流、学习连接声音、按需要准备虚拟音频驱动。
-可以选择“跳过引导，先看看”或“暂不安装，先看看”，之后不会重复弹出。
-在设置中点击“查看新手引导”可以重新打开；“驱动下载与安装”提供 VB-CABLE 和 Hi-Fi CABLE 的官方下载按钮、已检测状态及安装入口。
-只调整软件的播放去向可以直接使用。需要软件间的麦克风输入时，再下载并完整解压官方 ZIP，点击“安装已下载的驱动…”选择其中的安装程序，完成后重新检测设备。
+| 你想做的事 | 在声流里怎么安排 |
+| --- | --- |
+| 音乐用耳机，游戏用扬声器 | 分别为两个软件选择播放设备 |
+| 同一份声音在两处播放 | 给同一个软件再连一个播放设备 |
+| 让聊天或直播软件收到音乐 | 把音乐软件连到接收软件，再为它选择传声音的麦克风 |
+| 把音乐和讲话一起传过去 | 把音乐软件和你的麦克风都连到接收软件 |
+| 单独调小某一处声音 | 在那条连接的音量行里调整 |
+| 临时恢复原来的声音 | 点击“恢复原设置”，你画的线仍然保留 |
 
-![新手引导中的驱动下载与安装](docs/images/getting-started-drivers.png)
+## 下载与打开
 
-## 构建
+当前版本是 [v0.03](https://github.com/16Mu/AudioFlow/releases/tag/v0.03)。
 
-工具链由 vsm 管理。依赖使用 NuGet 与本地 .NET 工具清单。
+- **安装版**：下载后双击安装包，按提示安装，再从桌面或开始菜单打开“声流 AudioFlow”。
+- **免安装版**：把压缩包里的文件全部解压，打开 portable 文件夹，双击 AudioFlow.exe。
+- **第一次使用**：如果电脑还没有所需的微软组件，先[下载并安装 .NET 10 桌面组件](https://aka.ms/dotnet/10.0/windowsdesktop-runtime-win-x64.exe)。只需安装一次。
 
-    vsm current
-    vsm list dotnet
-    dotnet tool restore
-    .\scripts\build.ps1 -Verify
+只想把声音送到耳机或扬声器，可以直接使用。想把音乐或游戏声传给另一款软件，再按下面的说明安装驱动。
 
-公开版本 v0.02。构建输出为 dist\AudioFlow-0.02：MSI、便携 ZIP、源码 ZIP、使用说明、发布说明与校验文件。
-发布为框架依赖的 .NET 10 软件，不在项目内安装运行时副本。
-旧版含 Mode 与两份画布配置的工作区会先保存 workspace.json.pre-migration，再合并为共享配置。
+## 第一次使用，先在引导里练一次
 
-当前开发机 vsm 的 10.0.102 纳管路径实际含
-11.0.100-rc.2.26504.105 SDK；global.json 为本机锁定该可用 SDK。
-软件目标运行时为稳定 .NET 10。更换开发机时应按实际已纳管 SDK 调整 global.json。
+首次打开会出现引导，介绍软件能做什么、怎么连线、何时需要驱动。可以点“跳过引导，先看看”，以后从设置中重新打开。
 
-## 验证
+![首次使用引导：先了解声音可以送到哪里](docs/images/getting-started.png)
 
-    dotnet build tests/AudioFlow.Verification -c Release
-    .\tests\AudioFlow.Verification\bin\Release\net10.0-windows10.0.22000.0\AudioFlow.Verification.exe --unit
-    .\tests\AudioFlow.Verification\bin\Release\net10.0-windows10.0.22000.0\AudioFlow.Verification.exe --channel-tests
-    .\tests\AudioFlow.Verification\bin\Release\net10.0-windows10.0.22000.0\AudioFlow.Verification.exe --live 1800
+引导第二页有可以操作的模拟卡片，练习全程都在引导框内：
 
-新手引导与设置检查：
+1. 点选模拟音乐或视频软件。
+2. 右键练习区，添加播放设备卡片。
+3. 在卡片里选模拟耳机或扬声器。
+4. 把软件右侧的圆点拖到设备左侧的圆点。
+5. 点“开启声音连接”，看看模拟声音沿着线移动。
 
-    .\src\AudioFlow.App\bin\Release\net10.0-windows10.0.22000.0\win-x64\AudioFlow.exe --verify-onboarding .cache\onboarding-check
-    .\src\AudioFlow.App\bin\Release\net10.0-windows10.0.22000.0\win-x64\AudioFlow.exe --verify-settings .cache\settings-check
+完成后才会开放“下一步”。也可以重新练习或随时跳过。练习中的卡片和声音显示都是模拟的。
 
-界面验证使用 --verify-ui <报告目录>，会启动自有测试音程序并走实际退出与还原流程，
-同时验证已关闭应用重开、无音频会话时保留恢复记录及退出后的恢复助手。
+![引导框内的动手练习：亲手添加模拟卡片、拖线、开启模拟声音](docs/images/how-to-connect.png)
 
-真实音频验证使用两种不同频率的合成信号，检查四路输出矩阵、音量、
-按连线停止耳机输出、两路麦克风隔离、静音及退出恢复。只记录统计数据，不保存录音。
-本机 live 验证选择内置扬声器、Steam 虚拟输出和两路虚拟音频线；
-其他硬件组合可调整验证器中的设备选择。
+正式使用时，先让自己的软件播放声音，再从左边选择它，添加真实设备、拖动圆点连起来，最后开启声音连接。
+“设置一个软件”只看当前软件，“查看全部连接”能看所有卡片。两页会一起更新，切换时声音照常。
 
-## 结构
+## 想把音乐传给聊天、录音软件
 
-- AudioFlow.Core：共享路由图、工作区与导入导出、校验、有界音频缓冲。
-- AudioFlow.Audio：按进程树捕获、设备混音、Windows 输出偏好与恢复日志。
-- AudioFlow.App：WPF / Nodify 节点界面与托盘。
-- AudioFlow.Verification：纯逻辑检查与真实音频信号验证。
+下面任选一款安装，就能把音乐、游戏声和讲话传给其他软件。
 
-[App Audio Router 参考项目](https://github.com/Eververdants/AppAudioRouter)。
-第三方许可见 THIRD_PARTY_NOTICES.md。图谱与工具链记录见 docs/IMPLEMENTATION.md。
-主题颜色、字体与圆角统一由 src/AudioFlow.App/Themes/Tokens.xaml 管理，共享控件模板见 Themes/Controls.xaml。
-主题检查会拒绝视图中的硬编码颜色，并验证正常、悬停、选中与禁用文字对比度至少为 4.5:1。
+| 选择 | 单独安装能传几份声音 | 下载 |
+| --- | --- | --- |
+| VB-CABLE | 1 路，通常先选这款 | [官方压缩包](https://download.vb-audio.com/Download_CABLE/VBCABLE_Driver_Pack46.zip) |
+| Hi-Fi CABLE | 同样是 1 路；两款都装，才有 2 路 | [官方压缩包](https://download.vb-audio.com/Download_CABLE/HiFiCableAsioBridgeSetup_v1007.zip) |
 
-录音软件卡片可更改默认录音设备，“不进行输入”与开关同步。关闭录音使用一条空闲、无声音的独立虚拟通道，保持其他软件的录音。通道池根据已安装设备动态扩容，用尽时显示占用对象并明确选择是否共享混音。
+**1 路 = 1 份声音**，可以同时给多个软件听。比如 QQ 和直播软件，都听到同一份“音乐 + 讲话”。
+
+**2 路 = 2 份可以不同的声音**。比如 QQ 只听到讲话，直播软件听到“音乐 + 讲话”。要这样分别安排，需要把上面两款都装好。
+
+![引导和设置中都有驱动下载、安装和设备检查按钮](docs/images/getting-started-drivers.png)
+
+下载后，把压缩包里的文件**全部解压**，再点“安装已下载的驱动…”选择里面的安装程序。Windows 弹出确认窗口时，选择“是”。按安装提示重启电脑后，回到声流点“重新检测设备”。
+
+在接收声音的软件里，把麦克风选为 **CABLE Output** 或 **Hi-Fi Cable Output**。这些是 Windows 里显示的设备名称，选择时保留原名；不要选 Input。
+
+可以先点“暂不安装，先看看”。以后在设置里也能下载、安装和检查设备。驱动由 [VB-Audio 官方](https://vb-audio.com/Cable/)提供，使用和捐赠说明以官网为准。
+
+## 常见问题
+
+**左边没找到软件？** 先让它播放声音，或点“添加软件”搜索，也可以从电脑里选择。
+
+**连好后没声音？** 确认已经开启声音连接、目标设备没有静音、那条线的音量不是 0。接收软件还需要选对麦克风，详见上面的设备名称。
+
+**怎么换掉平时用的耳机？** 在这个软件的“主要播放”卡片里选择另一设备。再添加一张播放设备卡片，则会让声音同时送到另一处。
+
+**怎么断开一条线？** 双击普通连线，或点音量行的“×”。主要播放的线需要保留，换设备时在卡片里选择。
+
+**停止或退出后会怎样？** 声流会恢复原来的声音设置，并保留你画的连接。有些软件需要再次发声、设备需要重新接回后，才能完成恢复。
+
+**设置会丢吗？** 修改会自动保存，也可以用“打开”“保存”“另存为”管理自己的设置文件。
+
+蓝牙设备可能有延迟，少数使用特殊播放方式的软件可能无法把声音转给别处。
+
+## 更多说明
+
+[完整使用说明](docs/使用说明.md) · [更新记录](docs/发布说明.md) · [测试记录](docs/验证报告.md) · [下载源码](https://github.com/16Mu/AudioFlow/releases/download/v0.03/AudioFlow-0.03-source.zip) · [开发与验证](docs/DEVELOPMENT.md)
+
+声流的自有代码采用 [MIT 许可](LICENSE)。第三方软件的许可见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。参考项目：[App Audio Router](https://github.com/Eververdants/AppAudioRouter)。

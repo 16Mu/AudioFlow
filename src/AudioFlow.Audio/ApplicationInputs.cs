@@ -32,21 +32,21 @@ internal sealed class ApplicationInputs
         if (selection == null && node.ChannelId != null)
             selection = graph.Channels.FirstOrDefault(c => c.Id == node.ChannelId)?.CaptureEndpointId;
         if (selection == null) return "";
-        if (pids.Count == 0) return "录音设备已保存 · 等待软件运行";
+        if (pids.Count == 0) return "麦克风已保存 · 等待软件运行";
         var sessions = RecordingSessions.Read(pids);
         if (sessions.Count == 0 && !pids.Any(pid => new AudioCatalog().GetApplicationVolume([pid]) != null))
-            return "录音设备已保存 · 等待软件建立音频会话";
+            return "麦克风已选好 · 等待软件开始用声音";
         string? endpoint = selection == AudioOutput.SystemDefault ? null : selection;
         if (selection == AudioOutput.None)
         {
             var silent = graph.Channels.FirstOrDefault(c => c.Id == graph.SilentInputChannelId);
             if (silent == null || !endpoints.Any(e => e.Capture && e.Id == silent.CaptureEndpointId))
-                return "录音关闭未生效：静音虚拟通道未连接";
+                return "录音还没关掉：用于关闭录音的设备没有连接";
             if (new AudioCatalog().ActiveSessions(silent.RenderEndpointId).Any(s => s.Peak > .001))
-                return "录音关闭未生效：静音通道受到外部声音占用，请释放或更换通道";
+                return "录音还没关掉：别的软件正在往这个设备传声音，请停用它或换个设备";
             endpoint = silent.CaptureEndpointId;
         }
-        if (endpoint != null && !endpoints.Any(e => e.Capture && e.Id == endpoint)) return "录音设备未连接 · 等待重连";
+        if (endpoint != null && !endpoints.Any(e => e.Capture && e.Id == endpoint)) return "麦克风未连接 · 等待重连";
         var original = originals.FirstOrDefault(s => AppIdentity.Normalize(s.Key) == AppIdentity.Normalize(node.Key));
         if (original == null)
         {
@@ -64,8 +64,8 @@ internal sealed class ApplicationInputs
             applied[node.Key + "|" + pid] = signature;
         }
         string? expected = endpoint ?? endpoints.FirstOrDefault(e => e.Capture && e.Default)?.Id;
-        if (sessions.Any(s => s.EndpointId != expected)) return "录音偏好已设置 · 等待切换或请重开此软件的录音";
-        return selection == AudioOutput.None ? "录音已关闭 · 使用独立静音输入" : "录音设备已应用";
+        if (sessions.Any(s => s.EndpointId != expected)) return "麦克风已选好 · 如果没有切换，请重新开启这个软件的录音";
+        return selection == AudioOutput.None ? "录音已关闭 · 这个软件听不到声音" : "这个软件已使用所选麦克风";
     }
     public void Restore(AudioCatalog catalog, HashSet<string>? keep = null)
     {

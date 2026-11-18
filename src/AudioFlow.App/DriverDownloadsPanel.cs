@@ -15,9 +15,9 @@ internal static class DriverDownloads
 {
     public static IReadOnlyList<DriverDownload> All { get; } =
     [
-        new("Cable", "VB-CABLE", "推荐先装 · 一路虚拟麦克风", "CABLE Input", "CABLE Output", "VBCABLE_Setup_x64.exe",
+        new("Cable", "VB-CABLE", "通常先选这款 · 单独安装是 1 路", "CABLE Input", "CABLE Output", "VBCABLE_Setup_x64.exe",
             new("https://download.vb-audio.com/Download_CABLE/VBCABLE_Driver_Pack46.zip"), new("https://vb-audio.com/Cable/")),
-        new("HiFiCable", "Hi-Fi CABLE", "可选扩展 · 再加一路独立输入", "Hi-Fi Cable Input", "Hi-Fi Cable Output", "HiFiCableAsioBridgeSetup.exe",
+        new("HiFiCable", "Hi-Fi CABLE", "这款也可以 · 单独安装也是 1 路", "Hi-Fi Cable Input", "Hi-Fi Cable Output", "HiFiCableAsioBridgeSetup.exe",
             new("https://download.vb-audio.com/Download_CABLE/HiFiCableAsioBridgeSetup_v1007.zip"), new("https://vb-audio.com/Cable/#DownloadASIOBridge"))
     ];
 
@@ -32,13 +32,13 @@ internal static class DriverDownloads
             CheckFileExists = true
         };
         bool? selected = owner == null ? picker.ShowDialog() : picker.ShowDialog(owner);
-        return selected == true ? LaunchInstaller(picker.FileName) : "已取消选择。驱动可以稍后安装。";
+        return selected == true ? LaunchInstaller(picker.FileName) : "这次没有选择安装程序，需要时可以再装。";
     }
 
     internal static string LaunchInstaller(string path, Action<ProcessStartInfo>? launch = null)
     {
         if (!File.Exists(path) || !All.Any(driver => string.Equals(driver.InstallerName, Path.GetFileName(path), StringComparison.OrdinalIgnoreCase)))
-            throw new InvalidOperationException("请先完整解压官方 ZIP，再选择 VBCABLE_Setup_x64.exe 或 HiFiCableAsioBridgeSetup.exe。");
+            throw new InvalidOperationException("先把官方压缩包里的文件全部解压，再选择 VBCABLE_Setup_x64.exe 或 HiFiCableAsioBridgeSetup.exe。");
         var start = new ProcessStartInfo(Path.GetFullPath(path))
         {
             UseShellExecute = true, Verb = "runas", WorkingDirectory = Path.GetDirectoryName(Path.GetFullPath(path))!
@@ -48,7 +48,7 @@ internal static class DriverDownloads
             if (launch == null) Process.Start(start); else launch(start);
             return "已打开安装程序。完成安装并按提示重启后，点击「重新检测设备」。";
         }
-        catch (Win32Exception error) when (error.NativeErrorCode == 1223) { return "已取消管理员授权。驱动可以稍后安装。"; }
+        catch (Win32Exception error) when (error.NativeErrorCode == 1223) { return "已取消安装确认。需要时可以再装。"; }
     }
 }
 
@@ -92,6 +92,14 @@ internal sealed class DriverDownloadsPanel : StackPanel
         this.model = model;
         this.openLink = openLink ?? DriverDownloads.OpenOfficialLink;
         this.installDriver = installDriver ?? DriverDownloads.SelectInstaller;
+        var explanation = new StackPanel();
+        explanation.Children.Add(GuideUi.Text("1 路、2 路是什么意思？", "CardTitle", "Text.Primary"));
+        var one = GuideUi.Text("1 路 = 1 份声音。比如 QQ 和直播软件，都听到同一份“音乐 + 讲话”。");
+        one.Margin = new(0, 8, 0, 7); explanation.Children.Add(one);
+        explanation.Children.Add(GuideUi.Text("2 路 = 2 份可以不同的声音。比如 QQ 只听到讲话，直播软件听到“音乐 + 讲话”。"));
+        var both = GuideUi.Text("下面两款单独安装都只有 1 路；两款都装，才有 2 路。一路也可以给多个软件听。", "Caption", "Accent.Output");
+        both.Margin = new(0, 9, 0, 0); explanation.Children.Add(both);
+        Children.Add(GuideUi.Card(explanation, "Surface.Panel"));
         var cards = new Grid { Margin = new(0, 12, 0, 12) };
         cards.ColumnDefinitions.Add(new()); cards.ColumnDefinitions.Add(new());
         int column = 0;
@@ -102,17 +110,17 @@ internal sealed class DriverDownloadsPanel : StackPanel
             content.Children.Add(icon);
             var title = GuideUi.Text(driver.Name, "Heading", "Text.Primary");
             title.FontWeight = FontWeights.SemiBold; title.Margin = new(0, 8, 0, 7); content.Children.Add(title);
-            var purpose = GuideUi.Text(driver.Id == "Cable" ? "把软件声音送入 QQ、Discord、OBS 等软件的麦克风输入。" :
-                "两份不同的声音需要独立通道时再装；两端采样率需保持一致。");
+            var purpose = GuideUi.Text(driver.Id == "Cable" ? "把音乐、游戏声和讲话传给其他软件。通常先装这款，设置更省事。" :
+                "也能把声音传给其他软件。已经装了左边，想再传一份不同声音时，再装这款。");
             purpose.MinHeight = 58; content.Children.Add(purpose);
             var status = GuideUi.Text("", "Caption", "Accent.Success");
             status.Margin = new(0, 12, 0, 12); statuses.Add(driver, status); content.Children.Add(status);
-            var download = GuideUi.Button("↓  下载驱动 ZIP", "Download" + driver.Id, true);
+            var download = GuideUi.Button("↓  下载驱动", "Download" + driver.Id, true);
             download.ToolTip = driver.DownloadUri.AbsoluteUri;
             download.Margin = new(0, 0, 0, 7);
-            download.Click += (_, _) => Open(driver.DownloadUri, "已在浏览器打开官方下载。下载后请先完整解压 ZIP。");
+            download.Click += (_, _) => Open(driver.DownloadUri, "官方下载已打开。下载后，请先把压缩包里的所有文件解压出来。");
             content.Children.Add(download);
-            var website = GuideUi.Button("↗  官网与许可说明", "Website" + driver.Id);
+            var website = GuideUi.Button("↗  官网与使用说明", "Website" + driver.Id);
             website.ToolTip = driver.WebsiteUri.AbsoluteUri; website.Margin = new(0);
             website.Click += (_, _) => Open(driver.WebsiteUri, "已打开 VB-Audio 官方网站。");
             content.Children.Add(website);
@@ -122,16 +130,16 @@ internal sealed class DriverDownloadsPanel : StackPanel
         }
         Children.Add(cards);
         Children.Add(GuideUi.Text("下载安装 · 三个小步骤", "CardTitle", "Text.Primary"));
-        var steps = GuideUi.Text("1  下载并完整解压 ZIP\n2  选择安装程序，允许 Windows 请求管理员权限\n3  完成安装、按提示重启，再重新检测设备");
+        var steps = GuideUi.Text("1  下载压缩包，把里面的所有文件解压出来\n2  打开安装程序，Windows 询问时选择“是”\n3  按安装提示重启电脑，再点“重新检测设备”");
         steps.Margin = new(0, 8, 0, 10); steps.LineHeight = 23; Children.Add(steps);
         var bar = new WrapPanel();
         var install = GuideUi.Button("安装已下载的驱动…", "InstallDownloadedDriver");
-        install.ToolTip = "完整解压后选择官方安装程序；Windows 会请求管理员权限。";
+        install.ToolTip = "先解压所有文件，再选择安装程序。Windows 弹出确认窗口时，选择“是”。";
         install.Margin = new(0, 0, 8, 8);
         install.Click += (_, _) =>
         {
             try { SetFeedback(this.installDriver(Window.GetWindow(this))); }
-            catch (Exception error) { SetFeedback("安装程序未打开：" + error.Message, true); }
+            catch (Exception error) { SetFeedback("安装程序未打开：" + UserError.Describe(error), true); }
         };
         bar.Children.Add(install);
         var refresh = GuideUi.Button("↻  重新检测设备", "RefreshDriverDevices");
@@ -139,14 +147,14 @@ internal sealed class DriverDownloadsPanel : StackPanel
         refresh.Click += async (_, _) =>
         {
             refresh.IsEnabled = false;
-            try { await model.RefreshCatalogAsync(); UpdateStatus(); SetFeedback("检测完成。请在接收软件中选择对应的 Output 录音设备。"); }
-            catch (Exception error) { SetFeedback("检测未完成：" + error.Message, true); }
+            try { await model.RefreshCatalogAsync(); UpdateStatus(); SetFeedback("已重新检查。请在接收声音的软件里选 CABLE Output 或 Hi-Fi Cable Output 作为麦克风。"); }
+            catch (Exception error) { SetFeedback("检测未完成：" + UserError.Describe(error), true); }
             finally { refresh.IsEnabled = true; }
         };
         bar.Children.Add(refresh); Children.Add(bar);
         Children.Add(capacity);
         feedback.Margin = new(0, 8, 0, 0); Children.Add(feedback);
-        var note = GuideUi.Text("官方提供 ZIP 下载，遵循 VB-Audio 捐赠软件许可。单路 VB-CABLE 通常足够；无需同时安装两款。", "Caption", "Text.Muted");
+        var note = GuideUi.Text("下载由 VB-Audio 官方提供。通常先装 VB-CABLE 就够用，具体使用与捐赠说明见官网。", "Caption", "Text.Muted");
         note.Margin = new(0, 12, 0, 0); Children.Add(note);
         UpdateStatus();
         Loaded += (_, _) => { if (!subscribed) { model.PropertyChanged += ModelChanged; subscribed = true; } UpdateStatus(); };
@@ -155,7 +163,7 @@ internal sealed class DriverDownloadsPanel : StackPanel
     private void Open(Uri uri, string message)
     {
         try { openLink(uri); SetFeedback(message); }
-        catch (Exception error) { SetFeedback("链接未打开：" + error.Message + "；可从按钮提示中查看官方地址。", true); }
+        catch (Exception error) { SetFeedback("链接未打开：" + UserError.Describe(error) + "；可从按钮提示中查看官方地址。", true); }
     }
     private void SetFeedback(string message, bool failed = false)
     {
@@ -174,7 +182,7 @@ internal sealed class DriverDownloadsPanel : StackPanel
             bool detected = connected.Any(channel =>
                 model.Catalog.Endpoints.Any(e => e.Id == channel.RenderEndpointId && e.Name.Contains(driver.RenderName, StringComparison.OrdinalIgnoreCase)) &&
                 model.Catalog.Endpoints.Any(e => e.Id == channel.CaptureEndpointId && e.Name.Contains(driver.CaptureName, StringComparison.OrdinalIgnoreCase)));
-            text.Text = detected ? "✓  已检测到配对设备 · 无需重复安装" : "未检测到配对设备 · 按需安装";
+            text.Text = detected ? "✓  设备已找到 · 不用重复安装" : "还没找到设备 · 需要时再安装";
             Theme.Use(text, TextBlock.ForegroundProperty, detected ? "Accent.Success" : "Text.Muted");
         }
         capacity.Text = model.ChannelCapacity;

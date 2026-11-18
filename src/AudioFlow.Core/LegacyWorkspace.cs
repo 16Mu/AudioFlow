@@ -8,14 +8,14 @@ internal static class LegacyWorkspace
     public static WorkspaceState Read(string json, out bool migrated)
     {
         var root = JsonNode.Parse(json, new JsonNodeOptions { PropertyNameCaseInsensitive = true }) as JsonObject
-            ?? throw new GraphValidationException("工作区必须是 JSON 对象。");
+            ?? throw new GraphValidationException("上次的设置文件打不开，可能已经损坏。");
         migrated = root.ContainsKey("Mode");
         if (!migrated) return root.Deserialize<WorkspaceState>(SceneStore.JsonOptions)!;
         string mode = root["Mode"]?.GetValue<string>() ?? "PerApplication";
         string View(string value) => value switch
         {
             "Global" => "Global", "Application" or "PerApplication" => "PerApplication",
-            _ => throw new GraphValidationException("旧工作区的配置视图不受支持。")
+            _ => throw new GraphValidationException("这份旧设置暂时打不开，请换一个文件。")
         };
         root["View"] ??= JsonValue.Create(View(mode));
         root["RoutingPaused"] ??= root["WasPaused"]?.DeepClone() ?? JsonValue.Create(false);
@@ -49,7 +49,7 @@ internal static class LegacyWorkspace
             var existing = target.Channels.FirstOrDefault(c => c.Id == channel.Id);
             if (existing == null) target.Channels.Add(channel);
             else if (existing.RenderEndpointId != channel.RenderEndpointId || existing.CaptureEndpointId != channel.CaptureEndpointId)
-                throw new GraphValidationException("旧工作区的同名虚拟通道设备冲突；原文件已保留，请分别导出配置后重新导入。");
+                throw new GraphValidationException("这份旧设置里，有同名的麦克风用了不同设备。原文件仍然保留，请分别保存两份设置后再打开。");
         }
         var ids = new Dictionary<string, string>();
         foreach (var node in other.Nodes)

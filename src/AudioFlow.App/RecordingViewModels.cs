@@ -30,13 +30,13 @@ public sealed partial class NodeViewModel
         observedRecordingKey = observed != null && observed != Owner.Catalog.Endpoints.FirstOrDefault(e => e.Capture && e.Default)?.Id ? observed : AudioOutput.SystemDefault;
         var candidates = new List<CardChoice>
         {
-            new("不进行输入", AudioOutput.None, NodeKind.Microphone, "关闭此软件录音 · 需要一条空闲的静音虚拟通道"),
-            new("Windows 默认录音设备", AudioOutput.SystemDefault, NodeKind.Microphone,
-                Owner.Catalog.Endpoints.FirstOrDefault(e => e.Capture && e.Default)?.Name ?? "等待录音设备连接")
+            new("不接收声音", AudioOutput.None, NodeKind.Microphone, "让这个软件听不到声音；需要一个空着的传声音设备"),
+            new("跟随 Windows 的麦克风选择", AudioOutput.SystemDefault, NodeKind.Microphone,
+                Owner.Catalog.Endpoints.FirstOrDefault(e => e.Capture && e.Default)?.Name ?? "等待麦克风连接")
         };
         string? reserved = Owner.Graph.Channels.FirstOrDefault(c => c.Id == Owner.Graph.SilentInputChannelId)?.CaptureEndpointId;
-        candidates.AddRange(Owner.Catalog.Endpoints.Where(e => e.Capture && e.Id != reserved).Select(e => new CardChoice(e.Name, e.Id, NodeKind.Microphone, e.Virtual ? "虚拟麦克风" : "真实麦克风")));
-        if (candidates.All(c => c.Key != RecordingKey)) candidates.Add(new("上次录音设备 · 等待连接", RecordingKey, NodeKind.Microphone, "设备未连接"));
+        candidates.AddRange(Owner.Catalog.Endpoints.Where(e => e.Capture && e.Id != reserved).Select(e => new CardChoice(e.Name, e.Id, NodeKind.Microphone, e.Virtual ? "传声音的麦克风" : "真实麦克风")));
+        if (candidates.All(c => c.Key != RecordingKey)) candidates.Add(new("上次选的麦克风 · 等待连接", RecordingKey, NodeKind.Microphone, "设备未连接"));
         if (!RecordingChoices.Select(c => c.Key + c.Name).SequenceEqual(candidates.Select(c => c.Key + c.Name)))
         { RecordingChoices.Clear(); foreach (var choice in candidates) RecordingChoices.Add(choice); }
         Changed(nameof(RecordingChoice)); Changed(nameof(RecordingEnabled)); Changed(nameof(ShowRecordingControls));
@@ -70,9 +70,9 @@ public sealed partial class MainViewModel
             if (channel != null) { node.Model.ChannelId = channel.Id; node.Model.InputChannelPinned = true; }
             if (!graph.Nodes.Any(n => n.InputDeviceKey == AudioOutput.None)) graph.SilentInputChannelId = null;
             GraphCompiler.Compile(graph, Catalog.Endpoints); RebuildConnections(); BuildCanvas(); Edited(true);
-            node.RefreshRecordingChoices(); Notice = key == AudioOutput.None ? "已选择不进行输入；静音输入预留一条独立通道。" : "录音设备已选择，运行时应用到该软件。";
+            node.RefreshRecordingChoices(); Notice = key == AudioOutput.None ? "已经选好不接收声音，会留出一个空着的设备供它使用。" : "麦克风已经选好。开启声音连接后，这个软件会使用它。";
         }
-        catch (Exception error) { graph = backup; Rebuild(); Notice = error.Message; node.RefreshRecordingChoices(); }
+        catch (Exception error) { graph = backup; Rebuild(); Notice = UserError.Describe(error); node.RefreshRecordingChoices(); }
     }
     private void ReserveQuietInput()
     {
@@ -83,7 +83,7 @@ public sealed partial class MainViewModel
         if (current != null && ChannelPool.Free(graph, Catalog.Endpoints).Any(c => c.Id == current.Id) && Quiet(current))
         { graph.SilentInputChannelId = previous; return; }
         var available = ChannelPool.Free(graph, Catalog.Endpoints).FirstOrDefault(Quiet);
-        if (available == null) { graph.SilentInputChannelId = previous; throw new GraphValidationException("无法关闭录音：没有空闲且无声音的独立虚拟麦克风。请释放通道或安装更多虚拟设备。"); }
+        if (available == null) { graph.SilentInputChannelId = previous; throw new GraphValidationException("暂时关不了录音。请先腾出一个传声音的麦克风，或在设置里安装更多驱动。"); }
         graph.SilentInputChannelId = available.Id;
     }
 }

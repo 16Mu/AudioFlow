@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using AudioFlow.Audio;
+using AudioFlow.Core;
 
 namespace AudioFlow.App;
 
@@ -11,6 +12,14 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        if (e.Args.Length == 2 && e.Args[0] == "--verify-practice")
+        {
+            _ = VerifyPracticeAsync(e.Args[1]); return;
+        }
+        if (e.Args.Length == 2 && e.Args[0] == "--verify-copy")
+        {
+            _ = VerifyCopyAsync(e.Args[1]); return;
+        }
         if (e.Args.Length == 2 && e.Args[0] == "--verify-onboarding")
         {
             _ = VerifyOnboardingAsync(e.Args[1]); return;
@@ -41,7 +50,7 @@ public partial class App : Application
             return;
         }
         instance = new Mutex(true, "Local\\AudioFlow.Desktop", out bool first);
-        if (!first) { MessageBox.Show("声流已经在运行，可从任务栏托盘打开。", "声流"); Shutdown(); return; }
+        if (!first) { MessageBox.Show("声流已经打开了。点击任务栏右下角的声流图标，就能回到窗口。", "声流"); Shutdown(); return; }
         string? directory = null;
         for (int i = 0; i < e.Args.Length - 1; i++) if (e.Args[i] == "--data-dir") directory = e.Args[i + 1];
         var window = new MainWindow(directory);
@@ -50,7 +59,7 @@ public partial class App : Application
         DispatcherUnhandledException += (_, args) =>
         {
             try { File.AppendAllText(Path.Combine(window.ViewModel.Store.DataDirectory, "errors.log"), DateTime.Now + " " + args.Exception + Environment.NewLine); } catch { }
-            window.ViewModel.Notify("操作未完成：" + args.Exception.Message); args.Handled = true;
+            window.ViewModel.Notify("操作未完成：" + UserError.Describe(args.Exception)); args.Handled = true;
         };
     }
     protected override void OnExit(ExitEventArgs e) { instance?.Dispose(); base.OnExit(e); }
@@ -83,6 +92,16 @@ public partial class App : Application
     {
         try { await GettingStartedChecks.RunAsync(directory); Shutdown(0); }
         catch (Exception error) { Directory.CreateDirectory(directory); File.WriteAllText(Path.Combine(directory, "onboarding-error.log"), error.ToString()); Shutdown(1); }
+    }
+    private async Task VerifyCopyAsync(string directory)
+    {
+        try { await UiCopyChecks.RunAsync(directory); Shutdown(0); }
+        catch (Exception error) { Directory.CreateDirectory(directory); File.WriteAllText(Path.Combine(directory, "copy-error.log"), error.ToString()); Shutdown(1); }
+    }
+    private async Task VerifyPracticeAsync(string directory)
+    {
+        try { await SimulatedPracticeChecks.RunAsync(directory); Shutdown(0); }
+        catch (Exception error) { Directory.CreateDirectory(directory); File.WriteAllText(Path.Combine(directory, "practice-error.log"), error.ToString()); Shutdown(1); }
     }
     private async Task VerifyStartupAsync(string directory, string report)
     {

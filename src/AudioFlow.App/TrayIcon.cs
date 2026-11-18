@@ -39,7 +39,7 @@ internal sealed class TrayIcon : IDisposable
         {
             Size = (uint)Marshal.SizeOf<NotifyIcon>(), Window = handle, Id = 1,
             Flags = 1 | 2 | 4, CallbackMessage = Callback,
-            Tip = "声流 AudioFlow · 软件音频路由", Info = "", InfoTitle = "",
+            Tip = "声流 AudioFlow · 为软件选择声音去向", Info = "", InfoTitle = "",
             Icon = LoadImage(IntPtr.Zero, System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "app.ico"), 1, 32, 32, 16)
         };
         Shell_NotifyIcon(0, ref data);
@@ -52,8 +52,8 @@ internal sealed class TrayIcon : IDisposable
         {
             var menu = new ContextMenu { Placement = PlacementMode.MousePoint };
             var show = new MenuItem { Header = "打开声流" }; show.Click += (_, _) => window.ShowFromTray();
-            var pause = new MenuItem { Header = window.ViewModel.Running ? "停止声音路由" : "开启声音路由" }; pause.Click += async (_, _) => { if (window.ViewModel.Running) await window.ViewModel.PauseAsync(); else await window.ViewModel.StartAsync(); };
-            var restore = new MenuItem { Header = "恢复原有状态" }; restore.Click += async (_, _) => await window.ViewModel.RestoreOriginalStateAsync();
+            var pause = new MenuItem { Header = window.ViewModel.Running ? "停止声音连接" : "开启声音连接" }; pause.Click += async (_, _) => { if (window.ViewModel.Running) await window.ViewModel.PauseAsync(); else await window.ViewModel.StartAsync(); };
+            var restore = new MenuItem { Header = "恢复原设置" }; restore.Click += async (_, _) => await window.ViewModel.RestoreOriginalStateAsync();
             var exit = new MenuItem { Header = "退出" }; exit.Click += (_, _) => window.RequestExit();
             menu.Items.Add(show); menu.Items.Add(pause); menu.Items.Add(restore); menu.Items.Add(new Separator()); menu.Items.Add(exit); menu.IsOpen = true;
         }

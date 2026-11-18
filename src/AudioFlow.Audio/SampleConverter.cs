@@ -57,6 +57,6 @@ public sealed class SampleConverter(WaveFormat format)
             16 => BinaryPrimitives.ReadInt16LittleEndian(sample) / 32768f,
             24 => ((sample[0] << 8) | (sample[1] << 16) | (sample[2] << 24)) / 2147483648f,
             32 => BinaryPrimitives.ReadInt32LittleEndian(sample) / 2147483648f,
-            _ => throw new NotSupportedException("录音设备的采样格式不受支持。")
+            _ => throw new NotSupportedException("这个麦克风的声音格式暂时不能使用。请在 Windows 的声音设置里换个格式，或选择另一个麦克风。")
         };
 }

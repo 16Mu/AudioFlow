@@ -17,7 +17,7 @@ public static class ChannelPool
             var capture = group.Where(e => e.Capture).ToArray();
             if (render.Length != 1 || capture.Length != 1) continue;
             string id = "channel-" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(capture[0].Id)))[..12].ToLowerInvariant();
-            result.Add(new() { Id = id, Name = "虚拟麦克风 " + (result.Count + 1), RenderEndpointId = render[0].Id,
+            result.Add(new() { Id = id, Name = "传声音的麦克风 " + (result.Count + 1), RenderEndpointId = render[0].Id,
                 CaptureEndpointId = capture[0].Id, Provider = render[0].Name.Contains("Voicemeeter", StringComparison.OrdinalIgnoreCase) ? "Voicemeeter" : "Cable",
                 RequiresValidation = !render[0].Name.Contains("CABLE", StringComparison.OrdinalIgnoreCase) && !render[0].Name.Contains("Virtual Audio Cable", StringComparison.OrdinalIgnoreCase) });
         }
@@ -54,7 +54,7 @@ public static class ChannelPool
     {
         var channel = Connected(graph, endpoints).FirstOrDefault(c => c.Id == graph.SilentInputChannelId && !c.RequiresValidation)
             ?? Free(graph, endpoints).FirstOrDefault();
-        if (channel == null) throw new GraphValidationException("无法关闭此软件的录音：没有空闲的独立虚拟麦克风用于静音输入。请释放一条通道或安装更多虚拟设备。");
+        if (channel == null) throw new GraphValidationException("暂时关不了这个软件的录音。请先腾出一个传声音的麦克风，或在设置里安装更多驱动。");
         graph.SilentInputChannelId = channel.Id;
         return channel;
     }
@@ -67,7 +67,7 @@ public static class ChannelPool
             if (!route.Enabled || node.Key == AudioOutput.None)
             {
                 if (node.Key != AudioOutput.None) node.LastOutputKey = node.Key;
-                node.Key = AudioOutput.None; node.Name = "不进行输出"; route.Enabled = false;
+                node.Key = AudioOutput.None; node.Name = "不播放声音"; route.Enabled = false;
             }
         }
     }

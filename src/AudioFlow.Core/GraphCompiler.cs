@@ -6,44 +6,44 @@ public static class GraphCompiler
 {
     public static CompiledGraph Compile(RouteGraph graph, IReadOnlyList<AudioEndpoint> endpoints)
     {
-        if (graph.Version != 1) throw new GraphValidationException("场景版本不受支持。");
+        if (graph.Version != 1) throw new GraphValidationException("这个声音设置文件暂时打不开，请换一个文件。");
         if (graph.Nodes.Count > 2048 || graph.Connections.Count > 16384)
-            throw new GraphValidationException("场景中的节点或连接过多。");
+            throw new GraphValidationException("这个文件里的卡片和连线太多了，请减少一些后再试。");
         var nodes = new Dictionary<string, RouteNode>(StringComparer.Ordinal);
         foreach (var node in graph.Nodes)
         {
             if (string.IsNullOrEmpty(node.Id) || !nodes.TryAdd(node.Id, node))
-                throw new GraphValidationException("节点标识重复或为空。");
+                throw new GraphValidationException("设置文件里有重复或缺少信息的卡片，请换一个文件。");
             if (!float.IsFinite(node.Volume) || node.Volume is < 0 or > 2 ||
                 !double.IsFinite(node.X) || !double.IsFinite(node.Y))
-                throw new GraphValidationException("节点音量或位置不合法。");
+                throw new GraphValidationException("设置文件里的音量或卡片位置不正确，请换一个文件。");
             if (node.PrimaryOutput && (node.Kind != NodeKind.Playback || string.IsNullOrWhiteSpace(node.Key) ||
                 !graph.Nodes.Any(n => n.Kind == NodeKind.Application && AppIdentity.Normalize(n.Key) == AppIdentity.Normalize(node.OwnerAppKey ?? ""))))
-                throw new GraphValidationException("默认输出卡片必须属于一个已选择的软件。");
+                throw new GraphValidationException("请先选择软件，再设置它的主要播放设备。");
         }
         var channels = new Dictionary<string, VirtualChannel>(StringComparer.Ordinal);
         foreach (var channel in graph.Channels)
         {
             if (string.IsNullOrWhiteSpace(channel.Id) || !channels.TryAdd(channel.Id, channel))
-                throw new GraphValidationException("虚拟麦克风标识重复或为空。");
+                throw new GraphValidationException("设置文件里有重复或缺少信息的传声音设备。");
             if (channel.RenderEndpointId == channel.CaptureEndpointId)
-                throw new GraphValidationException("虚拟麦克风必须对应不同的播放和录音端点。");
+                throw new GraphValidationException("传声音的设备要分别选择发送和接收声音的设备，不能两边都选同一个。");
             if (!float.IsFinite(channel.Volume) || channel.Volume is < 0 or > 1)
-                throw new GraphValidationException("虚拟通道音量不合法。");
+                throw new GraphValidationException("传声音设备的音量不正确，请重新设置。");
             if (graph.Channels.Any(c => c.Id != channel.Id && (c.RenderEndpointId == channel.RenderEndpointId || c.CaptureEndpointId == channel.CaptureEndpointId)))
-                throw new GraphValidationException("同一个虚拟设备对不能重复计作独立通道。");
+                throw new GraphValidationException("同一个传声音的设备不能重复添加，请使用原来的那一个。");
         }
         var enabled = graph.Connections.Where(c => c.Enabled).ToList();
         foreach (var edge in graph.Connections)
         {
             if (!float.IsFinite(edge.Volume) || edge.Volume is < 0 or > 1)
-                throw new GraphValidationException("连线音量不合法。");
+                throw new GraphValidationException("这条线的音量不正确，请重新调整。");
             if (!nodes.TryGetValue(edge.SourceId, out var source) ||
                 !nodes.TryGetValue(edge.TargetId, out var target))
-                throw new GraphValidationException("连接引用了不存在的节点。");
+                throw new GraphValidationException("有一条线连到了已经不存在的卡片，请重新连接。");
             ValidateConnection(source, target, edge.Mode);
             if (target.PrimaryOutput && !ApplicationOutputs.IsPrimary(source, target))
-                throw new GraphValidationException("默认输出连线仅属于对应软件，不能接入其他来源。");
+                throw new GraphValidationException("这条主要播放的线只用于它所属的软件，请给其他软件另外添加播放设备。");
         }
         ValidateFeedback(nodes, enabled, channels, endpoints);
         var warnings = new List<string>();
@@ -62,7 +62,7 @@ public static class GraphCompiler
                     if (AudioOutput.Resolve(target.Key, endpoints) is { } playback)
                     {
                         if (graph.Channels.Any(c => c.Id == graph.SilentInputChannelId && c.RenderEndpointId == playback.Id))
-                            throw new GraphValidationException("此播放设备已预留用于静音录音输入，不能向它转发声音。");
+                            throw new GraphValidationException("这个设备正在用来关闭录音，不能再往它送声音。");
                         destinations.Add(new(playback.Id, false, null, edge.Volume, target.Key == AudioOutput.SystemDefault, ApplicationOutputs.IsPrimary(source, target)));
                     }
                     else warnings.Add($"{target.Name}：设备未连接，保留此连线等待重连。");
@@ -72,13 +72,13 @@ public static class GraphCompiler
                     if (target.ChannelId is not { } id || !channels.TryGetValue(id, out var channel) ||
                         !outputs.Contains(channel.RenderEndpointId) || !captures.Contains(channel.CaptureEndpointId))
                     {
-                        warnings.Add($"{target.Name}：请先设置虚拟麦克风的播放／录音设备对。");
+                        warnings.Add($"{target.Name}：请先在设置里选好发送和接收声音的设备。");
                         continue;
                     }
                     if (id == graph.SilentInputChannelId)
-                        throw new GraphValidationException("静音输入通道已预留给关闭录音的软件，不能转发声音到此通道。");
+                        throw new GraphValidationException("这个设备已经留给关闭录音的软件，不能再往它送声音。");
                     if (source.Kind == NodeKind.Microphone && source.Key == channel.CaptureEndpointId)
-                        throw new GraphValidationException("不能把虚拟麦克风的录音端送回它自身的播放端。");
+                        throw new GraphValidationException("不能让这个麦克风把刚收到的声音，又送回自己。");
                     destinations.Add(new(channel.RenderEndpointId, true, id, edge.Volume * channel.Volume));
                 }
             }
@@ -114,7 +114,7 @@ public static class GraphCompiler
 
     public static void ValidateConnection(RouteNode source, RouteNode target, RouteMode mode)
     {
-        if (source.Id == target.Id) throw new GraphValidationException("不能连接节点自身。");
+        if (source.Id == target.Id) throw new GraphValidationException("不能把一张卡片连回自己。");
         var audioSource = source.Kind is NodeKind.Application or NodeKind.Microphone;
         var valid = mode switch
         {
@@ -126,7 +126,7 @@ public static class GraphCompiler
                  source.ChannelId == target.ChannelId),
             _ => false
         };
-        if (!valid) throw new GraphValidationException("端口类型不匹配：软件声音连接播放设备或麦克风输入。");
+        if (!valid) throw new GraphValidationException("这两个位置不能连在一起。请从软件右边的圆点，拖到播放设备或麦克风左边的圆点。");
     }
 
     private static void ValidateFeedback(Dictionary<string, RouteNode> nodes,
@@ -175,6 +175,6 @@ public static class GraphCompiler
             return false;
         }
         if (dependencies.Keys.Any(Cycle))
-            throw new GraphValidationException("这些麦克风连接会形成应用间的声音反馈闭环。");
+            throw new GraphValidationException("这样连接会让声音在几个软件之间不停传回来。请断开一条返回的线。");
     }
 }

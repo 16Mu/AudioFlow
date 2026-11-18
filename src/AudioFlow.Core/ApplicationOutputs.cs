@@ -20,7 +20,7 @@ public static class ApplicationOutputs
                 output = new()
                 {
                     Kind = NodeKind.Playback, PrimaryOutput = true, OwnerAppKey = source.Key,
-                    Name = previous?.Name ?? "Windows 默认输出", Key = previous?.Key ?? AudioOutput.SystemDefault,
+                    Name = previous?.Name ?? "跟随 Windows 的选择", Key = previous?.Key ?? AudioOutput.SystemDefault,
                     X = source.X + 410, Y = source.Y
                 };
                 graph.Nodes.Add(output);

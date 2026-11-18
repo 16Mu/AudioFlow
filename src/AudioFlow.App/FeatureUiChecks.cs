@@ -24,9 +24,9 @@ internal static class FeatureUiChecks
         {
             string key = Path.Combine(directory, "RecordingConfigurationPreview.exe");
             model.ImportConfiguration(new() { Channels = model.Catalog.SuggestedChannels.ToList(), Nodes = [new() {
-                Id = "feature-source", Kind = NodeKind.Application, Key = key, Name = "录音设备验证", RecordingConfigured = true, InputDeviceKey = AudioOutput.SystemDefault }] });
+                Id = "feature-source", Kind = NodeKind.Application, Key = key, Name = "麦克风验证", RecordingConfigured = true, InputDeviceKey = AudioOutput.SystemDefault }] });
             await model.SwitchViewAsync(false); model.FocusApplication(key); model.Arrange(); Layout();
-            var input = Children(window).OfType<ComboBox>().Single(c => AutomationProperties.GetName(c) == "默认录音设备选择" &&
+            var input = Children(window).OfType<ComboBox>().Single(c => AutomationProperties.GetName(c) == "选择这个软件用的麦克风" &&
                 c.DataContext is NodeViewModel node && node.Id == "feature-source");
             input.SelectedItem = model.FocusedRoot!.RecordingChoices.First(c => c.Key == AudioOutput.None);
             Check(!model.FocusedRoot.RecordingEnabled && model.FocusedRoot.RecordingChoice?.Key == AudioOutput.None && model.Graph.SilentInputChannelId != null,

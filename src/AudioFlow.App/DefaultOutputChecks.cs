@@ -76,7 +76,7 @@ internal static class DefaultOutputChecks
             primary = model.Connections.Single(c => c.IsPrimary && c.Source.Owner.Id == firstId);
             Layout();
             var outputContainer = (DependencyObject)((NodifyEditor)window.FindName("Editor")).ItemContainerGenerator.ContainerFromItem(output)!;
-            var toggle = Children(outputContainer).OfType<CheckBox>().Single(c => Equals(c.Content, "输出到所选设备"));
+            var toggle = Children(outputContainer).OfType<CheckBox>().Single(c => Equals(c.Content, "从这个设备播放"));
             float savedGain = primary.Volume;
             toggle.IsChecked = false;
             Check(!output.DefaultOutputEnabled && model.Graph.Connections.Count == edgeCount + 1 &&

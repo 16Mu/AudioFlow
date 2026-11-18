@@ -19,7 +19,7 @@ public sealed class ApplicationPickerViewModel : Observable
     public AvailableItem? Selected { get => selected; set { if (Set(ref selected, value)) Changed(nameof(CanConfirm)); } }
     public bool CanConfirm => Selected != null;
     public bool NoChoices => Choices.Count == 0;
-    public string ResultCount => $"{Choices.Count} 个应用";
+    public string ResultCount => $"{Choices.Count} 个软件";
     public ApplicationPickerViewModel(IEnumerable<AvailableItem> items)
     {
         applications = items.GroupBy(a => AppIdentity.Normalize(a.Key)).Select(g => g.First()).ToList();
@@ -67,10 +67,10 @@ public partial class ApplicationPickerWindow : Window
     }
     private void BrowseClick(object sender, RoutedEventArgs e)
     {
-        var dialog = new OpenFileDialog { Title = "选择目标应用", Filter = "应用程序 (*.exe)|*.exe" };
+        var dialog = new OpenFileDialog { Title = "选择要设置的软件", Filter = "软件程序 (*.exe)|*.exe" };
         if (dialog.ShowDialog(this) != true) return;
         string name = Path.GetFileNameWithoutExtension(dialog.FileName);
         try { if (FileVersionInfo.GetVersionInfo(dialog.FileName).FileDescription is { Length: > 0 } description) name = description; } catch { }
-        ViewModel.Add(new(name, dialog.FileName, NodeKind.Application, "手动选择 · 等待软件运行"));
+        ViewModel.Add(new(name, dialog.FileName, NodeKind.Application, "已添加 · 等待软件打开"));
     }
 }

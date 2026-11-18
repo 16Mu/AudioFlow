@@ -26,7 +26,7 @@ internal static class UiChecks
         var checks = new List<string>();
         model.PickSharedChannel = _ => null;
         void Check(bool condition, string name) { if (!condition) throw new InvalidOperationException(name); checks.Add(name); }
-        Check(!model.Notice.StartsWith("工作区读取失败", StringComparison.Ordinal), "workspace loads without a JSON mapping error");
+        Check(!model.Notice.StartsWith("上次的设置没能打开", StringComparison.Ordinal), "workspace loads without a JSON mapping error");
         await model.InitializeAsync();
         ThemeChecks.Run(directory, checks);
         var apps = model.Catalog.Applications.Where(a => !a.Name.Contains("Verification", StringComparison.OrdinalIgnoreCase)).Take(3).ToArray();
@@ -55,7 +55,7 @@ internal static class UiChecks
         await model.AddManualApplicationAsync(picker.SelectedApplication!);
         Check(model.Graph.Nodes.Count == navigationNodes && model.Applications.Any(a => a.Key == apps[0].Path),
             "manual add preserves navigation without creating a route");
-        Check(model.Applications.Any(a => a.Detail.Contains("使用系统默认输出")), "unconfigured applications explicitly show system output");
+        Check(model.Applications.Any(a => a.Detail.Contains("按 Windows 的选择播放")), "unconfigured applications explicitly show system output");
         picker.Close();
         model.ImportConfiguration(new RouteGraph { Channels = model.Catalog.SuggestedChannels.ToList() });
         await model.SwitchViewAsync(true);
@@ -248,11 +248,11 @@ internal static class UiChecks
             NodeViewModel Node(string id) => model.Nodes.First(n => n.Id == id);
             await Until(() => model.Running && Output(first) == channels[0].RenderEndpointId && Output(second) == channels[1].RenderEndpointId,
                 "The shared graph did not activate both application outputs.");
-            Check(model.LiveSummary.Contains("声音路由运行中") && !model.LiveSummary.Contains("全局画布") && !model.LiveSummary.Contains("单软件配置"),
+            Check(model.LiveSummary.Contains("正在按连线播放") && !model.LiveSummary.Contains("查看全部连接") && !model.LiveSummary.Contains("设置一个软件"),
                 "routing status is independent of the selected canvas view");
             SavePreview(window, Path.Combine(directory, "running-controls.png"));
             var runButton = (Button)window.FindName("RunAction");
-            Check(runButton.Command == model.RunActionCommand && window.FindName("PauseAction") == null && model.RunActionLabel == "停止声音路由",
+            Check(runButton.Command == model.RunActionCommand && window.FindName("PauseAction") == null && model.RunActionLabel == "停止声音连接",
                 "running state exposes only Start Stop while view selection remains separate");
             await Task.Delay(200);
             double beforeSwitch = model.Engine.Snapshot().RunningSeconds;
@@ -260,7 +260,7 @@ internal static class UiChecks
             await Until(() => !model.GlobalView && !model.Busy, "The running switch action did not select the application view.");
             model.FocusApplication(firstPath);
             Check(Output(first) == channels[0].RenderEndpointId && Output(second) == channels[1].RenderEndpointId &&
-                model.Engine.Snapshot().RunningSeconds >= beforeSwitch && model.RunActionLabel == "停止声音路由",
+                model.Engine.Snapshot().RunningSeconds >= beforeSwitch && model.RunActionLabel == "停止声音连接",
                 "the running switch action changes only the view and preserves both audio outputs");
             Check(model.CanvasNodes.Any(n => n.Id == "source-A") && model.CanvasNodes.All(n => n.Id != "source-B") &&
                 model.Nodes.Any(n => n.Id == "source-B"),
@@ -285,7 +285,7 @@ internal static class UiChecks
             model.Connections.First(c => c.Model.SourceId == "source-A").Volume = .3f;
             model.RunActionCommand.Execute(null);
             await Until(() => !model.Running && !model.Busy, "Start Stop button did not stop routing.");
-            Check(!model.Running && model.Paused && Output(first) == null && Output(second) == null && model.RunActionLabel == "开启声音路由",
+            Check(!model.Running && model.Paused && Output(first) == null && Output(second) == null && model.RunActionLabel == "开启声音连接",
                 "pause restores both original outputs and exposes one shared resume action");
             SavePreview(window, Path.Combine(directory, "paused-controls.png"));
             await model.SwitchViewAsync(false); model.FocusApplication(firstPath);
@@ -300,7 +300,7 @@ internal static class UiChecks
             Check(model.Running && !model.Paused, "resume from either view applies the latest shared edits to all applications");
 
             var defaultA = model.Nodes.First(n => n.Model.PrimaryOutput && AppIdentity.Normalize(n.Model.OwnerAppKey ?? "") == AppIdentity.Normalize(firstPath));
-            model.ChooseCard(defaultA, new("Windows 默认输出", AudioOutput.SystemDefault, NodeKind.Playback, "系统默认"));
+            model.ChooseCard(defaultA, new("跟随 Windows 的选择", AudioOutput.SystemDefault, NodeKind.Playback, "系统默认"));
             model.DeleteCardCommand.Execute(Node("input-A"));
             await Until(() => Output(first) == null && Math.Abs(SessionVolume(first) - .174f) < .01 &&
                 Output(second) == channels[1].RenderEndpointId, "Changing A's default output did not preserve its route gain while leaving B unchanged.");

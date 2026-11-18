@@ -58,7 +58,7 @@ public sealed partial class NodeViewModel : Observable
     }
     public bool IsDraft { get; internal set; }
     public string Id => Model.Id;
-    public string Name => PlaybackCard && Model.Key == AudioOutput.SystemDefault ? "Windows 默认输出" : Model.Name;
+    public string Name => PlaybackCard && Model.Key == AudioOutput.SystemDefault ? "跟随 Windows 的选择" : Model.Name;
     public ImageSource? Icon => AppIcons.Get(Model.Key);
     public bool SoftwareCard => Model.Kind == NodeKind.Application;
     public bool AudioSource => Model.Kind is NodeKind.Application or NodeKind.Microphone;
@@ -74,7 +74,7 @@ public sealed partial class NodeViewModel : Observable
         set => Owner.SetDefaultOutputEnabled(this, value);
     }
     internal void RefreshDefaultOutput() { Changed(nameof(DefaultOutputEnabled)); Changed(nameof(Category)); }
-    public string CardAction => FocusedApplicationCard ? "当前软件" : Model.PrimaryOutput ? "默认输出" : "右键配置";
+    public string CardAction => FocusedApplicationCard ? "当前软件" : Model.PrimaryOutput ? "主要播放" : "右键可设置";
     internal void RefreshProtection() { Changed(nameof(CanChooseCard)); Changed(nameof(CanDelete)); Changed(nameof(CardAction)); }
     public bool IsVirtual => Model.Kind == NodeKind.VirtualMicrophone;
     public bool IsConfigured => Model.Kind == NodeKind.VirtualMicrophone ? !string.IsNullOrWhiteSpace(Model.ChannelId) :
@@ -82,11 +82,11 @@ public sealed partial class NodeViewModel : Observable
     public string Category => Model.Kind switch
     {
         NodeKind.Application => "软件",
-        NodeKind.Microphone => "真实麦克风 · 声音来源",
-        NodeKind.VirtualMicrophone => "虚拟麦克风 · 接收声音",
-        _ => Model.PrimaryOutput ? DefaultOutputEnabled ? "默认输出 · 原声播放" : "默认输出 · 已关闭" : "播放设备 · 复制声音"
+        NodeKind.Microphone => "麦克风 · 收取你的声音",
+        NodeKind.VirtualMicrophone => "传声音的麦克风",
+        _ => Model.PrimaryOutput ? DefaultOutputEnabled ? "平时播放的设备" : "平时播放 · 已关闭" : "再送到这个设备播放"
     };
-    public string PickerHint => SoftwareCard ? "选择正在运行的软件" : MicrophoneCard ? "选择真实／虚拟麦克风" : "选择播放设备";
+    public string PickerHint => SoftwareCard ? "选择正在运行的软件" : MicrophoneCard ? "选择麦克风或传声音的设备" : "选择耳机、扬声器等设备";
     public string Glyph => SoftwareCard ? "♫" : PlaybackCard ? "◖" : "◉";
     public Brush Accent => Theme.Brush(MicrophoneCard ? "Accent.Input" : "Accent.Output");
     public ObservableCollection<PortViewModel> Inputs { get; } = [];
@@ -141,10 +141,10 @@ public sealed partial class NodeViewModel : Observable
     }
     private int incoming, outgoing;
     public bool Receiving => SoftwareCard && incoming > 0;
-    public string LinkSummary => $"输入 {incoming} · 输出 {outgoing}";
+    public string LinkSummary => $"接收 {incoming} 处 · 发到 {outgoing} 处";
     public string InputDeviceName => Owner.Graph.Channels.FirstOrDefault(c => c.Id == Model.ChannelId) is { } channel
-        ? Owner.Catalog.Endpoints.FirstOrDefault(e => e.Id == channel.CaptureEndpointId)?.Name ?? "设备待连接"
-        : "连接时分配输入通道";
+        ? Owner.Catalog.Endpoints.FirstOrDefault(e => e.Id == channel.CaptureEndpointId)?.Name ?? "等待设备连接"
+        : "连好后，这里会显示软件要选的麦克风";
     public string InputHelp => "在这个软件中，将麦克风设置为：" + InputDeviceName;
     public bool OutputDisabled => SoftwareCard && outgoing == 0 && Owner.Graph.Connections.Any(c => c.SourceId == Id && !c.Enabled &&
         Owner.Graph.Nodes.Any(n => n.Id == c.TargetId && ApplicationOutputs.IsPrimary(Model, n)));
@@ -160,10 +160,10 @@ public sealed partial class NodeViewModel : Observable
     internal void RefreshPorts()
     {
         Inputs.Clear(); Outputs.Clear();
-        if (SoftwareCard) Inputs.Add(new(this, false, "声音输入", true));
+        if (SoftwareCard) Inputs.Add(new(this, false, "接收声音", true));
         else if (Model.Kind == NodeKind.VirtualMicrophone) Inputs.Add(new(this, false, "接收声音", true));
-        else if (PlaybackCard) Inputs.Add(new(this, false, "播放输入", false));
-        if (AudioSource) Outputs.Add(new(this, true, SoftwareCard ? "声音输出" : "麦克风声音", !SoftwareCard));
+        else if (PlaybackCard) Inputs.Add(new(this, false, "接收声音", false));
+        if (AudioSource) Outputs.Add(new(this, true, SoftwareCard ? "发出声音" : "麦克风声音", !SoftwareCard));
         else if (IsVirtual) Outputs.Add(new(this, true, "交给软件", true));
     }
     private string choiceSignature = "";
@@ -174,27 +174,27 @@ public sealed partial class NodeViewModel : Observable
         {
             foreach (var app in Owner.GetApplicationCandidates())
                 candidates.Add(new(app.Name, app.Path, NodeKind.Application, app.Peak > .001f ? "正在播放" :
-                    app.HasAudio ? "正在使用音频" : app.ProcessIds.Count > 0 ? "运行中 · 暂无音频" : "等待软件运行"));
+                    app.HasAudio ? "正在发声或使用麦克风" : app.ProcessIds.Count > 0 ? "已打开 · 暂无声音" : "等待软件打开"));
         }
         else if (MicrophoneCard)
         {
             foreach (var mic in Owner.Catalog.Endpoints.Where(e => e.Capture && !e.Virtual))
-                candidates.Add(new(mic.Name, mic.Id, NodeKind.Microphone, "真实麦克风 · 输出声音"));
+                candidates.Add(new(mic.Name, mic.Id, NodeKind.Microphone, "收取你的声音"));
             foreach (var channel in Owner.Graph.Channels)
-                candidates.Add(new(channel.Name, "", NodeKind.VirtualMicrophone, "虚拟麦克风 · 可接收软件声音", channel.Id));
+                candidates.Add(new(channel.Name, "", NodeKind.VirtualMicrophone, "把声音传给其他软件", channel.Id));
         }
         else
         {
-            if (Model.PrimaryOutput) candidates.Add(new("不进行输出", AudioOutput.None, NodeKind.Playback, "关闭此软件的默认原声输出"));
-            candidates.Add(new("Windows 默认输出", AudioOutput.SystemDefault, NodeKind.Playback, Owner.DefaultOutputName));
+            if (Model.PrimaryOutput) candidates.Add(new("不播放声音", AudioOutput.None, NodeKind.Playback, "关闭这个软件平时播放的声音"));
+            candidates.Add(new("跟随 Windows 的选择", AudioOutput.SystemDefault, NodeKind.Playback, Owner.DefaultOutputName));
             foreach (var endpoint in Owner.Catalog.Endpoints.Where(e => !e.Capture && e.Id != Owner.Graph.Channels.FirstOrDefault(c => c.Id == Owner.Graph.SilentInputChannelId)?.RenderEndpointId))
-                candidates.Add(new(endpoint.Name, endpoint.Id, NodeKind.Playback, endpoint.Default ? "Windows 当前默认设备" : "播放设备"));
+                candidates.Add(new(endpoint.Name, endpoint.Id, NodeKind.Playback, endpoint.Default ? "Windows 里当前选择的播放设备" : "播放设备"));
         }
         var selected = candidates.FirstOrDefault(c => c.Kind == Model.Kind &&
             (Model.Kind == NodeKind.VirtualMicrophone ? c.ChannelId == Model.ChannelId : AppIdentity.Normalize(c.Key) == AppIdentity.Normalize(Model.Key)));
         if (selected == null && IsConfigured)
         {
-            selected = new(Name, Model.Key, Model.Kind, "当前选择 · 等待运行／设备连接", Model.ChannelId);
+            selected = new(Name, Model.Key, Model.Kind, "已选择 · 等待软件打开或设备连接", Model.ChannelId);
             candidates.Insert(0, selected);
         }
         var signature = Model.Kind + ":" + Model.Key + ":" + Model.ChannelId + "|" +
@@ -228,7 +228,7 @@ public sealed partial class NodeViewModel : Observable
     private float level, inputLevel;
     public float Level { get => level; set => Set(ref level, Math.Clamp(value, 0, 1)); }
     public float InputLevel { get => inputLevel; set => Set(ref inputLevel, Math.Clamp(value, 0, 1)); }
-    private string status = "尚未开始", detail = "";
+    private string status = "还没开始", detail = "";
     public string Status { get => status; set => Set(ref status, value); }
     public string Detail { get => detail; set => Set(ref detail, value); }
 }
@@ -266,7 +266,7 @@ public sealed class RouteLevelViewModel : Observable, IDisposable
     public bool CanRemove => Connection.CanRemove;
     public float Volume { get => Connection.Volume; set => Connection.Volume = value; }
     public string VolumeLabel => Connection.VolumeLabel;
-    public string Help => Connection.SharedChannel ? "共享通道音量：使用同一虚拟麦克风的软件会一起变化。" : "仅调整这条连接；来源输出和目标输入显示同一个音量。";
+    public string Help => Connection.SharedChannel ? "共用这个麦克风的软件，收到的声音会一起变大或变小。" : "只改变这条线上的声音大小，两端显示的是同一个音量。";
     public RouteLevelViewModel(ConnectionViewModel connection, bool incoming)
     {
         Connection = connection; Incoming = incoming;
@@ -318,15 +318,15 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
     public RouteGraph Graph => graph;
     public WorkspaceState Workspace => workspace;
     public bool GlobalView => workspace.View == CanvasView.Global;
-    public string ViewLabel => GlobalView ? "全局画布" : "单软件配置";
+    public string ViewLabel => GlobalView ? "查看全部连接" : "设置一个软件";
     public string VersionLabel => "v" + typeof(MainViewModel).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
     public string DefaultOutputName => AudioOutput.DefaultName(Catalog.Endpoints);
-    public string ViewHint => GlobalView ? "右键添加软件、麦克风和播放设备 · 两种视图共享配置" : "在应用列表选择配置对象 · 仅显示相关卡片 · 两种视图共享配置";
-    public string FocusTitle => GlobalView ? "全部声音连接" : FocusedRoot?.Name ?? "选择要配置的应用";
+    public string ViewHint => GlobalView ? "在空白处右键添加软件或设备，再拖动圆点连起来" : "先在左边选软件，再把它连到你想用的耳机或麦克风";
+    public string FocusTitle => GlobalView ? "全部连接" : FocusedRoot?.Name ?? "先选一个软件";
     public string Counts => $"{CanvasNodes.Count} 张卡片 · {CanvasConnections.Count} 条连线";
-    public string LiveSummary => $"已配置 {graph.Connections.Where(c => c.Enabled).Select(c => c.SourceId).Distinct().Count()} · " + (Running ? "声音路由运行中" : Paused ? "已暂停" : "未启用");
+    public string LiveSummary => $"已连接 {graph.Connections.Where(c => c.Enabled).Select(c => c.SourceId).Distinct().Count()} 个软件或麦克风 · " + (Running ? "正在按连线播放" : Paused ? "已暂停" : "还没开启");
     public bool Paused => workspace.RoutingPaused;
-    public string RunActionLabel => Running ? "停止声音路由" : "开启声音路由";
+    public string RunActionLabel => Running ? "停止声音连接" : "开启声音连接";
     public bool CloseToTray { get => graph.CloseToTray; set { graph.CloseToTray = value; Changed(); Edited(false); } }
     public bool ResumeOnLaunch { get => workspace.RestoreRoutingStateOnLaunch; set { workspace.RestoreRoutingStateOnLaunch = value; Changed(); Edited(false); } }
     public ObservableCollection<NodeViewModel> Nodes { get; } = [];
@@ -350,14 +350,14 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
     public bool Reconnecting => reconnectOriginal != null;
     private CancellationTokenSource? editDelay;
     private bool rebuilding, refreshing, busy, running, disposed;
-    private string notice = "两种视图共享同一份配置；未配置的应用使用系统默认输出。", search = "";
+    private string notice = "两页是同一份设置，切换时声音照常。没改过的软件按原设置播放。", search = "";
     public bool Busy { get => busy; private set { Set(ref busy, value); CommandManager.InvalidateRequerySuggested(); } }
     public bool Running { get => running; private set { workspace.LastRoutingEnabled = value; Set(ref running, value); RefreshRunState(); } }
     public string Notice { get => notice; private set => Set(ref notice, value); }
     public string Search { get => search; set { if (Set(ref search, value)) RefreshApplications(); } }
     public bool NoApplications => Applications.Count == 0;
     public string ApplicationEmptyHint => string.IsNullOrWhiteSpace(Search) ?
-        "暂无已识别或已配置的音频应用\n可以点击“添加应用”手动选择" : "没有匹配的应用\n可以通过“添加应用”搜索其他软件";
+        "这里还没有软件\n先让软件播放声音，或点击“添加软件”" : "没找到这个软件\n试试别的名称，或点击“添加软件”";
     public Action? OpenSettings { get; set; }
     public Func<IReadOnlyList<AvailableItem>, AvailableItem?>? PickApplication { get; set; }
     public Action? FitRequested { get; set; }
@@ -385,7 +385,7 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
     public MainViewModel(string? directory = null)
     {
         Store = new(directory);
-        try { workspace = Store.LoadWorkspace(); } catch (Exception error) { notice = "工作区读取失败：" + error.Message; }
+        try { workspace = Store.LoadWorkspace(); } catch (Exception error) { notice = "上次的设置没能打开：" + UserError.Describe(error); }
         InitializeConfigurationFiles();
         lastUndo = SceneStore.Clone(graph);
         Engine = new(Store.DataDirectory, AddLog);
@@ -405,7 +405,7 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
         CopyInputCommand = new Command(value =>
         {
             if (value is NodeViewModel node && !string.IsNullOrWhiteSpace(node.Model.ChannelId))
-            { Clipboard.SetText(node.InputDeviceName); Notice = "已复制录音设备名称，请在目标软件中选择它。"; }
+            { Clipboard.SetText(node.InputDeviceName); Notice = "名称已复制。请在接收声音的软件里，把它选为麦克风。"; }
         });
         ApplicationViewCommand = new Command(async _ => await SwitchViewAsync(false), _ => !Busy);
         GlobalViewCommand = new Command(async _ => await SwitchViewAsync(true), _ => !Busy);
@@ -464,7 +464,7 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
         if (graph.Nodes.Any(n => n.InputDeviceKey == AudioOutput.None))
         {
             try { string? previous = graph.SilentInputChannelId; ReserveQuietInput(); if (previous != graph.SilentInputChannelId) Edited(false); }
-            catch (Exception error) { Notice = error.Message; }
+            catch (Exception error) { Notice = UserError.Describe(error); }
         }
         RefreshChannels();
         RefreshApplications();
@@ -506,12 +506,12 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
     public void SetDeviceVolume(NodeViewModel node, float volume)
     {
         try { if (PlaybackEndpoint(node) is { } id && deviceVolumes.TryGetValue(id, out var binding)) { Engine.SetDeviceVolume(binding, volume); node.UpdateDeviceVolume(binding.State); } }
-        catch (Exception error) { Notice = "设备音量修改失败：" + error.Message; }
+        catch (Exception error) { Notice = "设备音量修改失败：" + UserError.Describe(error); }
     }
     public void SetDeviceMuted(NodeViewModel node, bool muted)
     {
         try { if (PlaybackEndpoint(node) is { } id && deviceVolumes.TryGetValue(id, out var binding)) { Engine.SetDeviceMuted(binding, muted); node.UpdateDeviceVolume(binding.State); } }
-        catch (Exception error) { Notice = "设备静音修改失败：" + error.Message; }
+        catch (Exception error) { Notice = "设备静音修改失败：" + UserError.Describe(error); }
     }
     public float ReadRouteVolume(ConnectionViewModel connection) => connection.Source.Owner.IsVirtual ?
         graph.Channels.FirstOrDefault(c => c.Id == connection.Source.Owner.Model.ChannelId)?.Volume ?? 1 : connection.Model.Volume;
@@ -548,8 +548,8 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
     {
         if (!node.Model.PrimaryOutput || node.DefaultOutputEnabled == enabled) return;
         string key = enabled ? node.Model.LastOutputKey ?? AudioOutput.SystemDefault : AudioOutput.None;
-        string name = key == AudioOutput.None ? "不进行输出" : key == AudioOutput.SystemDefault ? "Windows 默认输出" : Catalog.Endpoints.FirstOrDefault(e => e.Id == key)?.Name ?? "上次输出设备 · 等待连接";
-        ChooseCard(node, new(name, key, NodeKind.Playback, "默认输出"));
+        string name = key == AudioOutput.None ? "不播放声音" : key == AudioOutput.SystemDefault ? "跟随 Windows 的选择" : Catalog.Endpoints.FirstOrDefault(e => e.Id == key)?.Name ?? "上次选的播放设备 · 等待连接";
+        ChooseCard(node, new(name, key, NodeKind.Playback, "主要播放"));
     }
     private bool Configured(string key)
     {
@@ -562,16 +562,16 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
         Applications.Clear();
         foreach (var app in ApplicationSelection.Sidebar(Catalog.Applications, workspace.ManualApplications, ConfiguredApplications, workspace.KnownAudioApplications, Search))
             Applications.Add(new(app.Name, app.Path, NodeKind.Application,
-                Configured(app.Path) ? (app.HasAudio ? "已配置 · 使用音频中" : app.ProcessIds.Count > 0 ? "已配置 · 暂无音频" : "已配置 · 等待运行") :
-                app.HasAudio ? "使用系统默认输出" : app.HasAudioSession || workspace.KnownAudioApplications.Any(a => AppIdentity.Normalize(a.Path) == app.Key) ?
-                "暂无音频 · 使用系统默认输出" : app.ProcessIds.Count > 0 ? "手动添加 · 使用系统默认输出" : "手动添加 · 等待运行"));
+                Configured(app.Path) ? (app.HasAudio ? "已设置 · 正在发声" : app.ProcessIds.Count > 0 ? "已设置 · 暂无声音" : "已设置 · 等待打开") :
+                app.HasAudio ? "按 Windows 的选择播放" : app.HasAudioSession || workspace.KnownAudioApplications.Any(a => AppIdentity.Normalize(a.Path) == app.Key) ?
+                "暂无声音 · 按原设置播放" : app.ProcessIds.Count > 0 ? "自己添加 · 按原设置播放" : "已添加 · 等待打开"));
         Changed(nameof(NoApplications)); Changed(nameof(ApplicationEmptyHint));
     }
     public IReadOnlyList<AudioApplication> GetApplicationCandidates() => ApplicationSelection.Candidates(Catalog.Applications,
         workspace.ManualApplications.Concat(ConfiguredApplications).Concat(workspace.KnownAudioApplications));
     public IReadOnlyList<AvailableItem> GetApplicationChoices() => GetApplicationCandidates().Select(app =>
         new AvailableItem(app.Name, app.Path, NodeKind.Application, app.Peak > .001f ? "正在播放声音" :
-            app.HasAudio ? "正在使用音频" : app.ProcessIds.Count > 0 ? "正在运行 · 暂无音频" : "已保存 · 等待运行")).ToList();
+            app.HasAudio ? "正在发声或使用麦克风" : app.ProcessIds.Count > 0 ? "已打开 · 暂无声音" : "已保存 · 等待打开")).ToList();
     public async Task AddManualApplicationAsync(AvailableItem app)
     {
         if (app.Kind != NodeKind.Application || string.IsNullOrWhiteSpace(app.Key)) return;
@@ -585,7 +585,7 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
     {
         CancelPendingConnection();
         workspace.FocusedApplication = key; draft = null; BuildCanvas(); SaveNow(); FitRequested?.Invoke();
-        Notice = "正在配置 " + FocusTitle + "；默认输出卡片选择原声设备，新增输出连线复制声音。";
+        Notice = "正在设置 " + FocusTitle + "：主要播放卡片决定平时在哪听；再连一个设备，就能同时在那里播放。";
     }
     public async Task SwitchViewAsync(bool global)
     {
@@ -596,12 +596,12 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
             Busy = true; CancelPendingConnection();
             workspace.View = global ? CanvasView.Global : CanvasView.PerApplication;
             draft = null; BuildCanvas(); SaveNow();
-            Notice = "已打开" + ViewLabel + "，两种视图共享同一份配置。";
+            Notice = "已打开" + ViewLabel + "，两页会一起更新。";
             Changed(nameof(GlobalView)); Changed(nameof(ViewLabel)); Changed(nameof(ViewHint));
             RefreshRunState();
             FitRequested?.Invoke();
         }
-        catch (Exception error) { Notice = "无法打开配置：" + error.Message; AddLog(Notice); }
+        catch (Exception error) { Notice = "这个软件的设置没能打开：" + UserError.Describe(error); AddLog(error.ToString()); }
         finally { Busy = false; configurationGate.Release(); }
     }
     private void BuildCanvas()
@@ -626,7 +626,7 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
                     draft ??= new NodeViewModel(new()
                     {
                         Id = "draft-" + Guid.NewGuid().ToString("N"), Kind = NodeKind.Application,
-                        Key = workspace.FocusedApplication!, Name = app?.Name ?? workspace.ManualApplications.FirstOrDefault(a => AppIdentity.Normalize(a.Path) == focus)?.Name ?? Path.GetFileNameWithoutExtension(workspace.FocusedApplication) ?? "未运行的应用",
+                        Key = workspace.FocusedApplication!, Name = app?.Name ?? workspace.ManualApplications.FirstOrDefault(a => AppIdentity.Normalize(a.Path) == focus)?.Name ?? Path.GetFileNameWithoutExtension(workspace.FocusedApplication) ?? "还没打开的软件",
                         X = 280, Y = 230
                     }, this, true);
                     FocusedRoot = draft;
@@ -646,7 +646,7 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
                         visibleNodes.Add(FocusedRoot);
                         if (draftOutput?.Model.OwnerAppKey != FocusedRoot.Model.Key)
                             draftOutput = new(new() { Id = "output-" + FocusedRoot.Id, Kind = NodeKind.Playback,
-                                PrimaryOutput = true, OwnerAppKey = FocusedRoot.Model.Key, Name = "Windows 默认输出",
+                                PrimaryOutput = true, OwnerAppKey = FocusedRoot.Model.Key, Name = "跟随 Windows 的选择",
                                 Key = AudioOutput.SystemDefault, X = FocusedRoot.Model.X + 410, Y = FocusedRoot.Model.Y }, this, true);
                         visibleNodes.Add(draftOutput);
                         var edge = new ConnectionViewModel(new() { Id = "route-" + FocusedRoot.Id, SourceId = FocusedRoot.Id,
@@ -707,11 +707,11 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
         while (graph.Nodes.Any(n => Math.Abs(n.X - x) < 40 && Math.Abs(n.Y - y) < 130)) y += 190;
         var node = new RouteNode
         {
-            Kind = kind, Name = kind == NodeKind.Application ? "选择软件" : kind == NodeKind.Microphone ? "选择麦克风" : "选择播放设备",
+            Kind = kind, Name = kind == NodeKind.Application ? "选择软件" : kind == NodeKind.Microphone ? "选择麦克风" : "选择耳机、扬声器等设备",
             X = x, Y = y, OwnerAppKey = GlobalView ? null : workspace.FocusedApplication
         };
         graph.Nodes.Add(node); Rebuild(); Edited(true);
-        Notice = "卡片已添加：在卡片内选择具体对象，再从输出端拖线到输入端。";
+        Notice = "卡片已添加。先选好软件或设备，再从右边的圆点拖到左边的圆点。";
         return Nodes.First(n => n.Id == node.Id);
     }
     public NodeViewModel AddItem(AvailableItem item)
@@ -727,12 +727,12 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
         var existing = Nodes.FirstOrDefault(n => n.IsVirtual && n.Model.ChannelId == channel.Id);
         if (existing != null) return existing;
         var node = AddBlank(NodeKind.Microphone);
-        ChooseCard(node, new(channel.Name, "", NodeKind.VirtualMicrophone, "虚拟麦克风", channel.Id));
+        ChooseCard(node, new(channel.Name, "", NodeKind.VirtualMicrophone, "传声音的麦克风", channel.Id));
         return Nodes.First(n => n.Id == node.Id);
     }
     public void ChooseCard(NodeViewModel node, CardChoice value)
     {
-        if (!node.CanChooseCard) { Notice = "当前软件由左侧应用列表选择；添加其他软件请右键添加卡片。"; return; }
+        if (!node.CanChooseCard) { Notice = "请在左边选择要设置的软件。想再加一个软件，可以在空白处右键添加卡片。"; return; }
         if (node.IsDraft && node.Model.PrimaryOutput)
         {
             CommitDraft(); RebuildConnections(); BuildCanvas();
@@ -744,9 +744,9 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
             if (node.IsDraft) { FocusApplication(value.Key); return; }
             if (value.Kind == NodeKind.Application && graph.Nodes.Any(n => n.Id != node.Id &&
                 n.Kind == NodeKind.Application && AppIdentity.Normalize(n.Key) == AppIdentity.Normalize(value.Key)))
-                throw new GraphValidationException("已经有该软件卡片，请使用现有卡片。");
+                throw new GraphValidationException("这个软件已经有卡片了，请用原来的那张。");
             if (node.Model.PrimaryOutput && (value.Kind != NodeKind.Playback || string.IsNullOrWhiteSpace(value.Key)))
-                throw new GraphValidationException("默认输出卡片只能选择播放设备。");
+                throw new GraphValidationException("这里只能选择耳机、扬声器等播放设备。");
             var oldKind = node.Model.Kind; var oldChannel = node.Model.ChannelId; var oldKey = node.Model.Key;
             node.Model.Kind = value.Kind; node.Model.Key = value.Key; node.Model.Name = value.Name;
             if (node.Model.PrimaryOutput)
@@ -777,9 +777,9 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
             GraphCompiler.Compile(graph, Catalog.Endpoints);
             node.RefreshPorts(); node.RefreshChoices(); RebuildConnections(); BuildCanvas(); Edited(true);
             RefreshDeviceVolumes();
-            Notice = removed > 0 ? "选择已更新，不兼容的旧连线已移除，请重新连接。" : "已选择 " + value.Name + "。";
+            Notice = removed > 0 ? "已经换好。旧的线不能再用，请重新连到你想要的位置。" : "已选择 " + value.Name + "。";
         }
-        catch (Exception error) { graph = backup; Rebuild(); Notice = error.Message; }
+        catch (Exception error) { graph = backup; Rebuild(); Notice = UserError.Describe(error); }
     }
     public void ChooseInputChannel(NodeViewModel node, VirtualChannel channel)
     {
@@ -792,17 +792,17 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
                 graph.Nodes.First(n => n.Id == c.SourceId).Kind == NodeKind.VirtualMicrophone &&
                 graph.Nodes.First(n => n.Id == c.SourceId).ChannelId != channel.Id);
             GraphCompiler.Compile(graph, Catalog.Endpoints); node.RefreshChoices(); RebuildConnections(); BuildCanvas(); Edited(true);
-            Notice = "已选择输入通道。使用同一通道的软件会接收同一份混音。";
+            Notice = "已经选好。共用这个麦克风的软件，会听到同样的声音。";
         }
-        catch (Exception error) { graph = backup; Rebuild(); Notice = error.Message; }
+        catch (Exception error) { graph = backup; Rebuild(); Notice = UserError.Describe(error); }
     }
     public void Connect(PortViewModel from, PortViewModel to)
         => TryConnect(from, to, 1, true);
     private bool TryConnect(PortViewModel from, PortViewModel to, float volume, bool history)
     {
         if (!from.Output && to.Output) (from, to) = (to, from);
-        if (!from.Output || to.Output) { Notice = "从右侧声音输出端，连接到左侧声音输入端。"; return false; }
-        if (!from.Owner.IsConfigured || !to.Owner.IsConfigured) { Notice = "请先在卡片中选择软件或麦克风／设备。"; return false; }
+        if (!from.Output || to.Output) { Notice = "从发声卡片右边的圆点，拖到接收卡片左边的圆点。"; return false; }
+        if (!from.Owner.IsConfigured || !to.Owner.IsConfigured) { Notice = "先在这张卡片里选好软件、麦克风或耳机。"; return false; }
         var backup = SceneStore.Clone(graph);
         try
         {
@@ -810,7 +810,7 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
             if (FocusedRoot != null && !Nodes.Contains(FocusedRoot)) Nodes.Add(FocusedRoot);
             var source = from.Owner.Model; var target = to.Owner.Model;
             if (target.PrimaryOutput && !ApplicationOutputs.IsPrimary(source, target))
-                throw new GraphValidationException("默认输出卡片只接收它所属软件的原声；复制声音请添加播放设备卡片。");
+                throw new GraphValidationException("这张主要播放卡片只用于它上游的软件。要再送到别处，请另加一张播放设备卡片。");
             var existing = graph.Connections.FirstOrDefault(c => c.SourceId == source.Id && c.TargetId == target.Id);
             if (existing != null)
             {
@@ -824,14 +824,14 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
                 {
                     if (!string.IsNullOrWhiteSpace(target.ChannelId) && target.ChannelId != source.ChannelId &&
                         (target.InputChannelPinned || graph.Connections.Any(c => c.TargetId == target.Id)))
-                        throw new GraphValidationException("该软件已使用另一输入通道，先在卡片中更改或断开原输入连线。");
+                        throw new GraphValidationException("这个软件已经连到别的麦克风了。请先在卡片里更换，或断开原来的线。");
                     target.ChannelId = source.ChannelId;
                 }
                 else if (string.IsNullOrWhiteSpace(target.ChannelId))
                 {
                     var available = ChannelPool.Free(graph, Catalog.Endpoints).FirstOrDefault();
                     if (available == null) available = PickSharedChannel?.Invoke(ChannelPool.Connected(graph, Catalog.Endpoints).Where(c => !c.RequiresValidation && c.Id != graph.SilentInputChannelId).ToArray());
-                    if (available == null) throw new GraphValidationException("独立虚拟麦克风已用完。" + ChannelCapacity + "。请选择共享混音或安装更多虚拟设备。");
+                    if (available == null) throw new GraphValidationException("能传不同声音的麦克风已经用完了。" + ChannelCapacity + "。可以选择听同样的声音，或在设置里添加更多驱动。");
                     target.ChannelId = available.Id;
                 }
                 target.InputDeviceKey = graph.Channels.FirstOrDefault(c => c.Id == target.ChannelId)?.CaptureEndpointId;
@@ -842,15 +842,15 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
             graph.Connections.Add(new() { SourceId = source.Id, TargetId = target.Id, Mode = mode, Volume = volume });
             GraphCompiler.Compile(graph, Catalog.Endpoints);
             RebuildConnections(); BuildCanvas(); Edited(history);
-            Notice = target.Kind == NodeKind.Playback ? source.Name + " → " + target.Name + "：播放输出" :
-                source.Name + " → " + target.Name + "：声音输入。目标软件需选择卡片上显示的录音设备。";
+            Notice = target.Kind == NodeKind.Playback ? source.Name + " → " + target.Name + "：从这个设备播放" :
+                source.Name + " → " + target.Name + "：把声音传给这个软件。请在软件里选用卡片显示的麦克风。";
             return true;
         }
-        catch (Exception error) { graph = backup; draft = null; Rebuild(); Notice = error.Message; return false; }
+        catch (Exception error) { graph = backup; draft = null; Rebuild(); Notice = UserError.Describe(error); return false; }
     }
     public void RemoveConnection(ConnectionViewModel connection)
     {
-        if (!connection.CanRemove) { Notice = "默认输出连线不能删除；在默认输出卡片中更换设备。"; return; }
+        if (!connection.CanRemove) { Notice = "这条主要播放的线需要保留。想换耳机，请在它连接的卡片里更换。"; return; }
         if (!graph.Connections.Remove(connection.Model)) return;
         RebuildConnections(); BuildCanvas(); Edited(true); Notice = "已断开连接。";
     }
@@ -864,7 +864,7 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
         reconnectBackup = SceneStore.Clone(graph); reconnectOriginal = chosen.Model;
         var source = chosen.Source;
         graph.Connections.Remove(chosen.Model); RebuildConnections(); BuildCanvas(); Edited(false);
-        Notice = "已移走连接：拖到新的输入端，放在空白处断开，Esc 恢复。";
+        Notice = "拖到另一个左侧圆点，就能换个去处。松在空白处会断开，按 Esc 可以放回去。";
         return source;
     }
     public PortViewModel PendingSource(PortViewModel port)
@@ -953,7 +953,7 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
             }
         }
         catch (OperationCanceledException) { }
-        catch (Exception error) { Notice = "配置更新失败：" + error.Message; }
+        catch (Exception error) { Notice = "这次的修改没能生效：" + UserError.Describe(error); }
         finally { if (entered) configurationGate.Release(); }
     }
     private void Undo()
@@ -978,7 +978,7 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
             a.Kind == NodeKind.Application && AppIdentity.Normalize(a.Key) == AppIdentity.Normalize(n.OwnerAppKey ?? "")))) removable.Add(output.Id);
         ids = removable;
         edges = Connections.Where(c => edges.Contains(c.Model.Id) && c.CanRemove).Select(c => c.Model.Id).ToHashSet();
-        if (ids.Count == 0 && edges.Count == 0) { Notice = "当前软件、默认输出卡片和默认连线不能删除。"; return; }
+        if (ids.Count == 0 && edges.Count == 0) { Notice = "当前的软件、主要播放卡片和它们之间的线需要保留。"; return; }
         graph.Nodes.RemoveAll(n => ids.Contains(n.Id));
         graph.Connections.RemoveAll(c => ids.Contains(c.SourceId) || ids.Contains(c.TargetId) || edges.Contains(c.Id));
         draft = null; Rebuild(); Edited(true);
@@ -991,14 +991,14 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
         foreach (var node in CanvasNodes)
             if (arranged.Positions.TryGetValue(node.Id, out var point)) { node.Model.X = point.X; node.Model.Y = point.Y; node.RefreshLocation(); }
         Edited(true); FitRequested?.Invoke();
-        Notice = "已整理画布：按声音方向分组，并减少连线交叉和遮挡。";
+        Notice = "卡片已整理，声音从左往右走，连线更容易看清。";
     }
     private void Import()
     {
-        var dialog = new OpenFileDialog { Title = "导入声音配置", Filter = "声音配置 (*.json)|*.json" };
+        var dialog = new OpenFileDialog { Title = "打开声音设置", Filter = "声流设置文件|*.json" };
         if (dialog.ShowDialog() != true) return;
         try { ImportConfiguration(Store.Load(dialog.FileName)); }
-        catch (Exception error) { Notice = error.Message; }
+        catch (Exception error) { Notice = UserError.Describe(error); }
     }
     public void ImportConfiguration(RouteGraph configuration)
     {
@@ -1009,13 +1009,13 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
         graph = imported; lastUndo = SceneStore.Clone(graph); draft = null;
         Rebuild(); Edited(false);
         Changed(nameof(CloseToTray)); Changed(nameof(ResumeOnLaunch));
-        Notice = "声音配置已导入，两个视图同步更新。";
+        Notice = "声音设置已打开，两页都会更新。";
     }
     private void Export()
     {
-        var dialog = new SaveFileDialog { Title = "导出声音配置", Filter = "声音配置 (*.json)|*.json", FileName = "声音配置.json" };
+        var dialog = new SaveFileDialog { Title = "保存声音设置", Filter = "声流设置文件|*.json", FileName = "声音设置.json" };
         if (dialog.ShowDialog() == true)
-            try { Store.Save(graph, dialog.FileName); Notice = "配置已导出。"; } catch (Exception error) { Notice = error.Message; }
+            try { Store.Save(graph, dialog.FileName); Notice = "声音设置已保存到所选文件。"; } catch (Exception error) { Notice = UserError.Describe(error); }
     }
     public async Task StartAsync()
     {
@@ -1028,9 +1028,9 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
             await Engine.ApplyAsync(selected);
             workspace.RoutingPaused = false;
             Running = Engine.Running; SaveNow();
-            Notice = "声音路由已运行，两种视图的修改都会实时生效。";
+            Notice = "已经开始按连线播放。现在改连线或音量，就会马上生效。";
         }
-        catch (Exception error) { Running = Engine.Running; Notice = "无法启用：" + error.Message; AddLog(Notice); }
+        catch (Exception error) { Running = Engine.Running; Notice = "无法启用：" + UserError.Describe(error); AddLog(error.ToString()); }
         finally { Busy = false; RefreshRunState(); configurationGate.Release(); }
     }
     public async Task PauseAsync()
@@ -1040,9 +1040,9 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
         {
             CancelScheduledEdit();
             await Engine.StopAndRestoreAsync(); workspace.RoutingPaused = true; Running = Engine.Running;
-            SaveNow(); Notice = RecoveryNotice("已暂停路由并恢复应用原来的 Windows 输出，配置已保存。");
+            SaveNow(); Notice = RecoveryNotice("已停止连接，软件的声音去向恢复到原来。你画的线和音量设置已保存。");
         }
-        catch (Exception error) { Notice = "恢复失败：" + error.Message; }
+        catch (Exception error) { Notice = "恢复失败：" + UserError.Describe(error); }
         finally { Busy = false; RefreshRunState(); configurationGate.Release(); }
     }
     public async Task RestoreOriginalStateAsync()
@@ -1054,13 +1054,13 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
             await Engine.StopAndRestoreAsync(restoreDevices: true);
             workspace.RoutingPaused = true; Running = Engine.Running;
             RefreshDeviceVolumes(); SaveNow();
-            Notice = RecoveryNotice("已恢复声流介入前的应用输出、音量与静音，配置已保留。");
+            Notice = RecoveryNotice("声音去向、音量和静音已恢复到使用声流之前。你画的连接仍然保留。");
         }
-        catch (Exception error) { Running = Engine.Running; Notice = "部分设置未能恢复：" + error.Message; AddLog(Notice); }
+        catch (Exception error) { Running = Engine.Running; Notice = "部分设置未能恢复：" + UserError.Describe(error); AddLog(error.ToString()); }
         finally { Busy = false; RefreshRunState(); configurationGate.Release(); }
     }
     private string RecoveryNotice(string complete) => Engine.PendingRecoveryCount == 0 ? complete :
-        $"声音路由已停止，配置已保留。还有 {Engine.PendingRecoveryCount} 项设置等待软件再次播放或设备重连后自动恢复。";
+        $"连接已停止，设置已保存。还有 {Engine.PendingRecoveryCount} 项声音设置，会在软件再次发声或设备接回后自动恢复。";
     private void RefreshRunState()
     {
         Changed(nameof(Paused)); Changed(nameof(RunActionLabel)); Changed(nameof(LiveSummary));
@@ -1077,8 +1077,8 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
             var level = snapshot.Levels.FirstOrDefault(l => l.NodeId == node.Id)?.Peak;
             node.Level = node.AudioSource ? level ?? (Catalog.Applications.FirstOrDefault(a => a.Key == AppIdentity.Normalize(node.Model.Key))?.Peak ?? 0) : 0;
             var status = snapshot.Statuses.FirstOrDefault(s => s.NodeId == node.Id);
-            node.Status = node.OutputDisabled || node.HasDefaultOutput && !node.DefaultOutputEnabled ? "默认输出已关闭" : !node.IsConfigured ? node.PickerHint : !Running ? (Paused ? "路由已暂停" : node.UseSystemOutput ? "使用系统默认输出" : "配置已保存 · 尚未启用")
-                : status?.State switch { "Active" => "声音路由中", "Waiting" => "等待软件运行", "Restart" => "请重启该软件", "Error" => "连接未就绪", _ => node.UseSystemOutput ? "使用系统默认输出" : "通道已配置" };
+            node.Status = node.OutputDisabled || node.HasDefaultOutput && !node.DefaultOutputEnabled ? "主要播放已关闭" : !node.IsConfigured ? node.PickerHint : !Running ? (Paused ? "声音连接已停止" : node.UseSystemOutput ? "按 Windows 的选择播放" : "设置已保存 · 还没开启连接")
+                : status?.State switch { "Active" => "正在按连线播放", "Waiting" => "等待软件打开", "Restart" => "请重启该软件", "Error" => "这条连接还不能使用", _ => node.UseSystemOutput ? "按 Windows 的选择播放" : "传声音的麦克风已选好" };
             if (status != null) node.Detail = status.Message;
             node.RecordingStatus = Engine.InputStatus(node.Id);
         }
@@ -1092,7 +1092,7 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
             else { edge.Target.Owner.InputLevel += incoming; edge.Target.Owner.Level += incoming; }
             edge.Active = Running && incoming > .001f;
             edge.Flowing = Running && edge.Model.Enabled && edge.Target.Owner.Model.InputDeviceKey != AudioOutput.None &&
-                edge.Source.Owner.IsConfigured && edge.Target.Owner.IsConfigured && edge.Source.Owner.Status != "连接未就绪";
+                edge.Source.Owner.IsConfigured && edge.Target.Owner.IsConfigured && edge.Source.Owner.Status != "这条连接还不能使用";
         }
         foreach (var edge in Connections.Where(e => e.Source.Owner.IsVirtual))
         {
@@ -1100,7 +1100,7 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
             edge.Active = Running && edge.Source.Owner.Level > .001f;
             edge.Flowing = Running && edge.Model.Enabled && edge.Target.Owner.Model.InputDeviceKey != AudioOutput.None;
         }
-        if (FocusedRoot?.IsDraft == true) { FocusedRoot.Status = "默认输出 → " + DefaultOutputName; FocusedRoot.Level = Catalog.Applications.FirstOrDefault(a => a.Key == AppIdentity.Normalize(FocusedRoot.Model.Key))?.Peak ?? 0; }
+        if (FocusedRoot?.IsDraft == true) { FocusedRoot.Status = "主要播放 → " + DefaultOutputName; FocusedRoot.Level = Catalog.Applications.FirstOrDefault(a => a.Key == AppIdentity.Normalize(FocusedRoot.Model.Key))?.Peak ?? 0; }
     }
     public void AddLog(string message)
     {

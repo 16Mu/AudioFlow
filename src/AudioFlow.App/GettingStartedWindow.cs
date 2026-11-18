@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using AudioFlow.Core;
 
 namespace AudioFlow.App;
 
@@ -18,6 +19,7 @@ internal sealed class GettingStartedWindow : Window
     private readonly Button[] steps = new Button[3];
     private readonly TextBlock progress = GuideUi.Text("", "Caption", "Text.Muted");
     internal int Step { get; private set; }
+    private SimulatedPracticePanel? exercise;
 
     public GettingStartedWindow(MainViewModel model, Action<Uri>? openLink = null, Func<Window?, string>? installDriver = null)
     {
@@ -39,7 +41,7 @@ internal sealed class GettingStartedWindow : Window
         var brand = GuideUi.Text("声流\nAudioFlow", "Heading", "Text.Primary"); brand.FontWeight = FontWeights.SemiBold;
         railContent.Children.Add(brand);
         var strap = GuideUi.Text("把声音送到\n你想去的地方", "Body", "Accent.Output"); strap.Margin = new(0, 12, 0, 40); railContent.Children.Add(strap);
-        string[] labels = ["认识声流", "学会连接声音", "按需准备驱动"];
+        string[] labels = ["认识声流", "学会连接声音", "需要时安装驱动"];
         for (int i = 0; i < steps.Length; i++)
         {
             int selected = i;
@@ -67,8 +69,9 @@ internal sealed class GettingStartedWindow : Window
         Theme.Use(footerSurface, Border.BorderBrushProperty, "Border.Default"); Grid.SetRow(footerSurface, 1); content.Children.Add(footerSurface);
         Grid.SetColumn(content, 1); root.Children.Add(content); Content = root;
         previous.Click += (_, _) => { if (Step > 0) Step--; RenderStep(); };
-        next.Click += (_, _) => { if (Step == 2) Close(); else { Step++; RenderStep(); } };
+        next.Click += (_, _) => { if (Step == 1 && exercise?.IsCompleted != true) return; if (Step == 2) Close(); else { Step++; RenderStep(); } };
         skip.Click += (_, _) => Close();
+        Closed += (_, _) => exercise?.Stop();
         RenderStep();
     }
     private void Heading(string eyebrow, string title, string description)
@@ -88,11 +91,12 @@ internal sealed class GettingStartedWindow : Window
         }
         previous.Visibility = Step == 0 ? Visibility.Collapsed : Visibility.Visible;
         next.Content = Step == 2 ? "开始使用  →" : "下一步  →";
+        next.IsEnabled = Step != 1 || exercise?.IsCompleted == true;
         skip.Content = Step == 2 ? "暂不安装，先看看" : "跳过引导，先看看";
         progress.Text = $"第 {Step + 1} 步，共 3 步 · 随时可以跳过";
         if (Step == 0)
         {
-            Heading("01 / 认识声流", "让每个软件，拥有自己的声音路线", "声流是一个 Windows 音频路由器。像连接积木一样，把软件、麦克风和播放设备连起来，决定声音在哪里播放、送给谁。");
+            Heading("01 / 认识声流", "想在哪听，就把软件连到哪里", "用声流，把音乐软件连到耳机，把游戏连到扬声器；也可以把音乐和你的讲话，一起传给聊天或直播软件。");
             var diagram = new Grid { Margin = new(0, 8, 0, 22) };
             diagram.ColumnDefinitions.Add(new()); diagram.ColumnDefinitions.Add(new() { Width = new(46) }); diagram.ColumnDefinitions.Add(new());
             var source = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
@@ -102,7 +106,7 @@ internal sealed class GettingStartedWindow : Window
             var arrow = GuideUi.Text("→", "Hero", "Accent.Output"); arrow.VerticalAlignment = VerticalAlignment.Center; arrow.HorizontalAlignment = HorizontalAlignment.Center;
             Grid.SetColumn(arrow, 1); diagram.Children.Add(arrow);
             var destinations = new StackPanel();
-            foreach (var (name, detail) in new[] { ("耳机 / 扬声器", "一路声音，可以同时送到多个输出"), ("另一款软件的麦克风", "通过虚拟音频线，传递软件声音") })
+            foreach (var (name, detail) in new[] { ("耳机 / 扬声器", "同一个软件，可以同时在多个设备播放"), ("另一款软件的麦克风", "把音乐或游戏声，传给另一款软件") })
             {
                 var target = new StackPanel(); target.Children.Add(GuideUi.Text(name, "Title", "Text.Primary"));
                 var targetCopy = GuideUi.Text(detail, "Caption"); targetCopy.Margin = new(0, 7, 0, 0); target.Children.Add(targetCopy);
@@ -110,37 +114,29 @@ internal sealed class GettingStartedWindow : Window
             }
             Grid.SetColumn(destinations, 2); diagram.Children.Add(destinations); page.Children.Add(diagram);
             AddFeature("播放更自由", "让不同软件使用不同的耳机或扬声器，也能把同一份声音复制到多个设备。");
-            AddFeature("麦克风不止能收人声", "把音乐、游戏声和真实麦克风混合，送入聊天、录音或直播软件；不同内容使用不同虚拟通道。");
-            var local = GuideUi.Text("音频在本机处理。你可以先浏览界面，等需要虚拟麦克风时再准备驱动。", "Caption", "Text.Muted");
+            AddFeature("让聊天软件也能听到音乐", "把音乐、游戏声和你的讲话一起传过去。想让不同软件听到不同声音，也能分别安排。");
+            var local = GuideUi.Text("声音留在你的电脑上。可以先看看，需要把声音传给其他软件时，再安装驱动。", "Caption", "Text.Muted");
             local.Margin = new(0, 12, 0, 0); page.Children.Add(local);
         }
         else if (Step == 1)
         {
-            Heading("02 / 学会连接声音", "四步，连起第一条声音路线", "单软件配置适合专心设置一个应用；全局画布可以查看全部连接。两个视图共用一份配置，切换不会打断声音。");
-            string[] titles = ["选择要配置的软件", "添加声音的目的地", "把输出端拖到输入端", "开启声音路由"];
-            string[] details = ["先让软件播放声音，再从左侧选择它；没找到时点击「添加应用」搜索或手动选择。",
-                "在画布空白处右键，添加播放设备或麦克风卡片，然后在卡片中选择具体设备。",
-                "从软件右侧的「声音输出」拖到目标左侧的「播放输入 / 声音输入」。一份声音可以连接多个目标。",
-                "点击右上角「开启声音路由」。之后的连线、音量与静音修改实时生效，配置自动保存。"];
-            for (int i = 0; i < titles.Length; i++)
+            Heading("02 / 在这里跟着做", "亲手连起一条声音线", "下面是引导框内的练习区，软件、设备和音量显示都是模拟的。照着提示点击和拖动，完成后再进入下一步。");
+            if (exercise == null)
             {
-                var row = new Grid(); row.ColumnDefinitions.Add(new() { Width = new(42) }); row.ColumnDefinitions.Add(new());
-                var number = GuideUi.Text((i + 1).ToString("00"), "Title", "Accent.Output"); number.FontWeight = FontWeights.SemiBold; row.Children.Add(number);
-                var text = new StackPanel(); text.Children.Add(GuideUi.Text(titles[i], "CardTitle", "Text.Primary"));
-                var description = GuideUi.Text(details[i]); description.Margin = new(0, 7, 0, 0); text.Children.Add(description);
-                Grid.SetColumn(text, 1); row.Children.Add(text); var card = GuideUi.Card(row); card.Margin = new(0, 0, 0, 10); page.Children.Add(card);
+                exercise = new SimulatedPracticePanel();
+                exercise.ProgressChanged += (_, _) => next.IsEnabled = Step != 1 || exercise.IsCompleted;
             }
-            var tip = GuideUi.Text("小提示：默认输出卡片控制软件原声；新增播放设备连接用于复制声音。停止路由会还原声音设置，关闭窗口默认退出并还原。", "Caption", "Text.Muted");
-            tip.Margin = new(0, 8, 0, 0); page.Children.Add(tip);
+            page.Children.Add(exercise);
         }
         else
         {
-            Heading("03 / 按需准备驱动", "先用起来，驱动可以稍后再装", "只调整软件到耳机或扬声器的播放去向，可以直接开始。要把软件声音送进另一款软件的麦克风输入，再安装虚拟音频线。");
+            Heading("03 / 需要时安装驱动", "任选一款，就能把声音传给软件", "只想用耳机或扬声器听声音，可以先跳过。想让 QQ、聊天或直播软件收到音乐和你的讲话，下面任选一款安装就能开始。");
             page.Children.Add(new DriverDownloadsPanel(model, openLink, installDriver));
-            var tip = GuideUi.Text("安装后，接收软件的麦克风选 CABLE Output 或 Hi-Fi Cable Output。设置中会一直保留下载、安装和检测入口。", "Caption", "Text.Muted");
+            var tip = GuideUi.Text("装好后，在接收声音的软件里，把麦克风选为 CABLE Output 或 Hi-Fi Cable Output。以后在设置里也能下载、安装和检查设备。", "Caption", "Text.Muted");
             tip.Margin = new(0, 12, 0, 0); page.Children.Add(tip);
         }
     }
+    internal void ShowDriverStep() { Step = 2; RenderStep(); }
     private void AddFeature(string title, string detail)
     {
         var feature = new StackPanel(); feature.Children.Add(GuideUi.Text(title, "CardTitle", "Text.Primary"));
@@ -153,6 +149,6 @@ internal sealed class GettingStartedWindow : Window
         if (e.Cancel) return;
         try { state.Dismiss(); }
         catch (Exception error) when (error is System.IO.IOException or UnauthorizedAccessException)
-        { model.Notify("引导偏好未保存，下次可能再次显示：" + error.Message); }
+        { model.Notify("这次的引导选择没能记住，下次可能还会显示：" + UserError.Describe(error)); }
     }
 }

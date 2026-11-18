@@ -66,7 +66,7 @@
       "audioflow.audio": {
         "type": "Project",
         "dependencies": {
-          "AudioFlow.Core": "[0.0.2, )",
+          "AudioFlow.Core": "[0.0.3, )",
           "NAudio": "[3.3.0, )"
         }
       },

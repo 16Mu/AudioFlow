@@ -49,15 +49,15 @@ internal static class ThemeChecks
 
         var menu = new ContextMenu();
         foreach (var header in new[] { "添加软件卡片", "添加麦克风卡片", "添加播放设备卡片" }) menu.Items.Add(new MenuItem { Header = header });
-        menu.Items.Add(new Separator()); menu.Items.Add(new MenuItem { Header = "复制声音输入设备名", IsEnabled = false });
+        menu.Items.Add(new Separator()); menu.Items.Add(new MenuItem { Header = "复制这个麦克风的名称", IsEnabled = false });
         menu.Items.Add(new MenuItem { Header = "删除此卡片" });
         var menuHost = new StackPanel { Margin = new(18) };
         menuHost.Children.Add(new TextBlock { Text = "右键菜单", FontSize = 18, Margin = new(0, 0, 0, 12) });
         menuHost.Children.Add(Snapshot(menu, 300, 400));
         var controls = new StackPanel { Margin = new(18) };
         controls.Children.Add(new TextBlock { Text = "统一控件状态", FontSize = 18, Margin = new(0, 0, 0, 14) });
-        controls.Children.Add(new TextBox { Text = "搜索应用名称", Margin = new(0, 0, 0, 12) });
-        controls.Children.Add(new ComboBox { ItemsSource = new[] { "耳机 / 扬声器", "虚拟麦克风 1" }, SelectedIndex = 0, Margin = new(0, 0, 0, 12) });
+        controls.Children.Add(new TextBox { Text = "搜索软件名称", Margin = new(0, 0, 0, 12) });
+        controls.Children.Add(new ComboBox { ItemsSource = new[] { "耳机 / 扬声器", "传声音的麦克风 1" }, SelectedIndex = 0, Margin = new(0, 0, 0, 12) });
         var editable = new ComboBox { ItemsSource = new[] { "接收软件" }, IsEditable = true, Text = "可编辑的选择框", Margin = new(0, 0, 0, 12) }; controls.Children.Add(editable);
         controls.Children.Add(new Button { Content = "运行中的操作", Style = (Style)Application.Current.FindResource("PrimaryButton"), HorizontalAlignment = HorizontalAlignment.Left });
         controls.Children.Add(new Button { Content = "暂不可用的操作", IsEnabled = false, Margin = new(0, 12, 0, 12), HorizontalAlignment = HorizontalAlignment.Left });

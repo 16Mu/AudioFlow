@@ -54,7 +54,7 @@ internal static class SettingsChecks
             }
             int playback = model.Catalog.Endpoints.Count(e => !e.Capture);
             int microphones = ChannelPool.Connected(model.Graph, model.Catalog.Endpoints).Count(c => !c.RequiresValidation);
-            Check(texts.Any(t => t.Text.Contains($"{playback} 个播放设备") && t.Text.Contains($"虚拟麦克风 {microphones} 路")),
+            Check(texts.Any(t => t.Text.Contains($"找到 {playback} 个能播放声音的设备") && t.Text.Contains($"传声音的麦克风 {microphones} 个")),
                 "settings separates actual playback endpoint count from independent virtual microphone count");
             Check(model.Catalog.Endpoints.Where(e => !e.Capture).All(e => texts.Any(t => t.Text.StartsWith(e.Name))),
                 "settings lists every detected physical and virtual playback endpoint");

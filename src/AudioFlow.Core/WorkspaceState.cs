@@ -28,7 +28,7 @@ public static class WorkspacePersistence
     {
         var path = Path.Combine(store.DataDirectory, "workspace.json");
         if (!File.Exists(path)) return new();
-        if (new FileInfo(path).Length > 4 * 1024 * 1024) throw new GraphValidationException("工作区文件超过 4 MB。");
+        if (new FileInfo(path).Length > 4 * 1024 * 1024) throw new GraphValidationException("上次的设置文件太大了（超过 4 MB），请换一个文件。");
         var state = LegacyWorkspace.Read(File.ReadAllText(path), out bool migrated);
         Validate(state);
         if (migrated)
@@ -49,8 +49,8 @@ public static class WorkspacePersistence
     }
     private static void Validate(WorkspaceState state)
     {
-        if (state.Version != 1) throw new GraphValidationException("工作区版本不受支持。");
-        if (!Enum.IsDefined(state.View)) throw new GraphValidationException("画布视图不受支持。");
+        if (state.Version != 1) throw new GraphValidationException("上次的设置文件暂时打不开，请换一个文件。");
+        if (!Enum.IsDefined(state.View)) throw new GraphValidationException("这个设置文件记录的页面无法打开，请换一个文件。");
         GraphCompiler.Compile(state.Configuration, []);
     }
 }

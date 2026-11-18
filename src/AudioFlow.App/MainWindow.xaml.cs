@@ -134,7 +134,7 @@ public partial class MainWindow : Window
         catch (Exception error)
         {
             closing = false; IsEnabled = true;
-            ViewModel.Notify("退出还原未完成，请点击“恢复原有状态”后重试：" + error.Message);
+            ViewModel.Notify("还有声音设置没恢复，请点“恢复原设置”后再试：" + UserError.Describe(error));
             return;
         }
         tray?.Dispose();

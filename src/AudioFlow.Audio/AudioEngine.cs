@@ -179,7 +179,7 @@ public sealed class AudioEngine : IAsyncDisposable
                     var active = await Task.Run(() => catalog.CurrentRenderDevices(pids));
                     if (primary.Volume > 0 && active.Count > 0 && active.Any(id => id != primary.EndpointId))
                     {
-                        statuses[node.Id] = new(node.Id, "Restart", "输出偏好已设置；请重启此软件使原声切换到选定设备");
+                        statuses[node.Id] = new(node.Id, "Restart", "设备已选好。请重新打开这个软件，让声音换到新设备。");
                         continue;
                     }
                     // Stream routing can create a new session with default gain.
@@ -215,12 +215,12 @@ public sealed class AudioEngine : IAsyncDisposable
                 }
                 else await runtime.AddRecorderAsync(null, node.Key);
                 statuses[node.Id] = new(node.Id, "Active",
-                    route.Destinations.Any(d => d.Microphone) ? "通道运行中 · 在目标软件选择对应麦克风" : "已路由到选定的播放设备");
+                    route.Destinations.Any(d => d.Microphone) ? "声音正在传过去 · 请在接收软件里选用相应麦克风" : "正在从选好的设备播放");
             }
             catch (Exception ex)
             {
                 await RemoveSourceAsync(node.Id, false);
-                statuses[node.Id] = new(node.Id, "Error", "路由未就绪：" + ex.Message);
+                statuses[node.Id] = new(node.Id, "Error", "声音暂时没能传过去：" + UserError.Describe(ex));
                 log?.Invoke(node.Name + "：" + ex.Message);
             }
         }
@@ -245,7 +245,7 @@ public sealed class AudioEngine : IAsyncDisposable
                 var pids = app?.ProcessIds ?? catalog.FindApplicationProcesses(node.Key);
                 inputStatuses[node.Id] = await Task.Run(() => inputs.Apply(node, graph, pids, snapshot.Endpoints));
             }
-            catch (Exception error) { inputStatuses[node.Id] = "录音设置未生效：" + error.Message; log?.Invoke(inputStatuses[node.Id]); }
+            catch (Exception error) { inputStatuses[node.Id] = "麦克风还没换好：" + UserError.Describe(error); log?.Invoke(error.ToString()); }
         }
     }
 
