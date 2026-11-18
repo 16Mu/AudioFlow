@@ -1,0 +1,41 @@
+<Window x:Class="AudioFlow.App.ApplicationPickerWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework" Title="添加应用" Width="980" Height="680" MinWidth="800" MinHeight="540" WindowStartupLocation="CenterOwner" WindowStyle="None" ResizeMode="CanResize" Background="{DynamicResource Surface.Panel}" PreviewKeyDown="PickerKeyDown">
+  <shell:WindowChrome.WindowChrome><shell:WindowChrome CaptionHeight="48" ResizeBorderThickness="6" CornerRadius="{DynamicResource Radius.Control}" GlassFrameThickness="0" UseAeroCaptionButtons="False" /></shell:WindowChrome.WindowChrome>
+  <Window.Resources>
+    <Style TargetType="ListBoxItem">
+      <Setter Property="Padding" Value="13" /><Setter Property="Margin" Value="5" /><Setter Property="MinHeight" Value="104" /><Setter Property="HorizontalContentAlignment" Value="Stretch" /><Setter Property="Cursor" Value="Hand" /><Setter Property="FocusVisualStyle" Value="{x:Null}" />
+      <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem">
+        <Border x:Name="Tile" Background="{DynamicResource Surface.Card}" BorderBrush="{DynamicResource Border.Default}" BorderThickness="1" CornerRadius="{DynamicResource Radius.Control}" Padding="{TemplateBinding Padding}"><ContentPresenter /></Border>
+        <ControlTemplate.Triggers>
+          <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Tile" Property="Background" Value="{DynamicResource Surface.Card.Hover}" /><Setter TargetName="Tile" Property="BorderBrush" Value="{DynamicResource Border.Hover}" /></Trigger>
+          <Trigger Property="IsSelected" Value="True"><Setter TargetName="Tile" Property="Background" Value="{DynamicResource Surface.Card.Selected}" /><Setter TargetName="Tile" Property="BorderBrush" Value="{DynamicResource Accent.Output}" /></Trigger>
+          <Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="Tile" Property="BorderBrush" Value="{DynamicResource Border.Focus}" /></Trigger>
+        </ControlTemplate.Triggers>
+      </ControlTemplate></Setter.Value></Setter>
+    </Style>
+  </Window.Resources>
+  <Border CornerRadius="{DynamicResource Radius.Control}" BorderBrush="{DynamicResource Border.Default}" BorderThickness="1" Background="{DynamicResource Surface.Panel}">
+    <Grid><Grid.RowDefinitions><RowDefinition Height="48" /><RowDefinition Height="62" /><RowDefinition Height="74" /><RowDefinition Height="*" /><RowDefinition Height="76" /></Grid.RowDefinitions>
+      <Grid Margin="22,0,9,0"><TextBlock Text="添加应用" FontSize="{DynamicResource FontSize.Title}" FontWeight="SemiBold" VerticalAlignment="Center" /><Button Content="×" Click="CancelClick" HorizontalAlignment="Right" VerticalAlignment="Center" Width="35" Padding="4" Background="{DynamicResource Transparent}" BorderBrush="{DynamicResource Transparent}" FontSize="{DynamicResource FontSize.Heading}" shell:WindowChrome.IsHitTestVisibleInChrome="True" AutomationProperties.Name="关闭应用选择" /></Grid>
+      <StackPanel Grid.Row="1" Margin="23,4,23,0"><TextBlock Text="选择应用，打开它的专属配置" FontSize="{DynamicResource FontSize.Section}" FontWeight="SemiBold" /><TextBlock Text="手动添加的应用即使暂时没有声音，也会保留在左侧。" Foreground="{DynamicResource Text.Muted}" FontSize="{DynamicResource FontSize.Body}" Margin="0,7,0,0" /></StackPanel>
+      <Grid Grid.Row="2" Margin="23,8,23,12"><TextBox x:Name="ApplicationSearch" Text="{Binding Search,UpdateSourceTrigger=PropertyChanged}" FontSize="{DynamicResource FontSize.CardTitle}" VerticalContentAlignment="Center" Padding="13,11" AutomationProperties.Name="搜索应用名称" ToolTip="按显示名称或常用别名搜索，例如微信、B站、Edge" />
+        <TextBlock Text="搜索应用名称，如：微信、B站、Edge…" Foreground="{DynamicResource Text.Muted}" FontSize="{DynamicResource FontSize.Body}" Margin="14,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"><TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{Binding Search}" Value=""><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
+      </Grid>
+      <Grid Grid.Row="3" Margin="18,0,18,10">
+        <ListBox x:Name="ApplicationGrid" ItemsSource="{Binding Choices}" SelectedItem="{Binding Selected,Mode=TwoWay}" Background="{DynamicResource Transparent}" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" MouseDoubleClick="ApplicationDoubleClick">
+          <ListBox.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="3" /></ItemsPanelTemplate></ListBox.ItemsPanel>
+          <ListBox.ItemTemplate><DataTemplate><Grid ToolTip="{Binding Key}"><Grid.ColumnDefinitions><ColumnDefinition Width="36" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+            <Grid VerticalAlignment="Top" Margin="0,4,0,0"><TextBlock Text="♫" FontSize="{DynamicResource FontSize.Heading}" Foreground="{DynamicResource Accent.Output}" HorizontalAlignment="Center" /><Image Source="{Binding Icon}" Width="32" Height="32" /></Grid>
+            <StackPanel Grid.Column="1" Margin="11,2,0,0"><TextBlock Text="{Binding Name}" FontSize="{DynamicResource FontSize.Body}" FontWeight="SemiBold" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" /><TextBlock Text="{Binding Detail}" Foreground="{DynamicResource Text.Muted}" FontSize="{DynamicResource FontSize.Caption}" Margin="0,8,0,0" /></StackPanel>
+          </Grid></DataTemplate></ListBox.ItemTemplate>
+        </ListBox>
+        <TextBlock Text="没有找到匹配的应用&#xA;试试其他名称，或从电脑中选择。" Foreground="{DynamicResource Text.Muted}" FontSize="{DynamicResource FontSize.CardTitle}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Visibility="{Binding NoChoices,Converter={StaticResource BoolVisibility}}" IsHitTestVisible="False" />
+      </Grid>
+      <Border Grid.Row="4" Background="{DynamicResource Surface.Panel}" BorderBrush="{DynamicResource Border.Default}" BorderThickness="0,1,0,0" CornerRadius="0,0,14,14" Padding="23,12">
+        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+          <StackPanel Orientation="Horizontal" VerticalAlignment="Center"><Button Content="从电脑中选择…" Click="BrowseClick" FontSize="{DynamicResource FontSize.Body}" /><TextBlock Text="{Binding ResultCount}" Foreground="{DynamicResource Text.Muted}" FontSize="{DynamicResource FontSize.Caption}" Margin="10,0,0,0" VerticalAlignment="Center" /></StackPanel>
+          <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"><Button Content="取消" Click="CancelClick" Background="{DynamicResource Transparent}" /><Button x:Name="ConfirmApplication" Content="添加并配置" Click="ConfirmClick" IsEnabled="{Binding CanConfirm}" Style="{StaticResource PrimaryButton}" Margin="0" /></StackPanel>
+        </Grid>
+      </Border>
+    </Grid>
+  </Border>
+</Window>

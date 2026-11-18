@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>AudioFlow</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets/app.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../AudioFlow.Audio/AudioFlow.Audio.csproj" />
+    <PackageReference Include="Nodify" Version="7.3.0" />
+    <Content Include="Assets/app.ico" CopyToOutputDirectory="PreserveNewest" />
+    <Resource Include="Assets/app-icon.png" />
+  </ItemGroup>
+</Project>

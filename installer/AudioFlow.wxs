@@ -1,0 +1,30 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="声流 AudioFlow" Manufacturer="AudioFlow Contributors" Version="$(var.ReleaseVersion)" UpgradeCode="23066380-03F2-477F-9814-DF0292C13207" Scope="perUser" Language="2052" Codepage="936">
+    <MajorUpgrade AllowDowngrades="yes" />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+    <Icon Id="AudioFlowIcon" SourceFile="$(var.ProjectRoot)\src\AudioFlow.App\Assets\app.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AudioFlowIcon" />
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="UserPrograms" Name="Programs"><Directory Id="INSTALLFOLDER" Name="AudioFlow">
+        <Component Id="ApplicationFiles" Guid="A79620E9-87F7-40B9-86B0-EAB9DF1BD382">
+          <File Id="AudioFlowExe" Source="$(var.PublishDir)\AudioFlow.exe" />
+          <File Id="QuickGuide" Source="$(var.ProjectRoot)\docs\使用说明.md" />
+          <File Id="ThirdPartyNotices" Source="$(var.ProjectRoot)\THIRD_PARTY_NOTICES.md" />
+          <Shortcut Id="StartShortcut" Directory="ProgramMenuFolder" Name="声流 AudioFlow" Target="[#AudioFlowExe]" WorkingDirectory="INSTALLFOLDER" Icon="AudioFlowIcon" />
+          <Shortcut Id="DesktopShortcut" Directory="DesktopFolder" Name="声流 AudioFlow" Target="[#AudioFlowExe]" WorkingDirectory="INSTALLFOLDER" Icon="AudioFlowIcon" />
+          <RegistryValue Root="HKCU" Key="Software\AudioFlow" Name="InstallDir" Type="string" Value="[INSTALLFOLDER]" KeyPath="yes" />
+          <RemoveFolder Id="RemoveApplicationFolder" Directory="INSTALLFOLDER" On="uninstall" />
+        </Component>
+        <Directory Id="AssetsFolder" Name="Assets">
+          <Component Id="TrayIconFile" Guid="683ECA48-073F-4AB1-88D3-02191F3FBA9E">
+            <File Id="TrayIcon" Source="$(var.ProjectRoot)\src\AudioFlow.App\Assets\app.ico" />
+            <RegistryValue Root="HKCU" Key="Software\AudioFlow" Name="HasAssets" Type="integer" Value="1" KeyPath="yes" />
+            <RemoveFolder Id="RemoveAssetsFolder" Directory="AssetsFolder" On="uninstall" />
+          </Component>
+        </Directory>
+      </Directory></Directory>
+    </StandardDirectory>
+    <StandardDirectory Id="DesktopFolder" /><StandardDirectory Id="ProgramMenuFolder" />
+    <Feature Id="Main" Title="声流 AudioFlow" Level="1"><ComponentRef Id="ApplicationFiles" /><ComponentRef Id="TrayIconFile" /></Feature>
+  </Package>
+</Wix>

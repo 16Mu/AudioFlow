@@ -1,0 +1,16 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.22000.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>14.0</LangVersion>
+    <Deterministic>true</Deterministic>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <Version>0.0.1</Version>
+    <InformationalVersion>0.01</InformationalVersion>
+    <ProductDisplayVersion>0.01</ProductDisplayVersion>
+    <Authors>AudioFlow Contributors</Authors>
+    <Copyright>Copyright (c) 2026 AudioFlow Contributors</Copyright>
+  </PropertyGroup>
+</Project>

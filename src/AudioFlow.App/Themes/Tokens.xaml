@@ -1,0 +1,116 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+  <!-- All application colors originate here. Controls use semantic brush tokens. -->
+  <Color x:Key="Color.Surface.Window">#0B121A</Color>
+  <SolidColorBrush x:Key="Surface.Window" Color="{DynamicResource Color.Surface.Window}"/>
+  <Color x:Key="Color.Surface.Title">#0B1118</Color>
+  <SolidColorBrush x:Key="Surface.Title" Color="{DynamicResource Color.Surface.Title}"/>
+  <Color x:Key="Color.Surface.Panel">#0F1923</Color>
+  <SolidColorBrush x:Key="Surface.Panel" Color="{DynamicResource Color.Surface.Panel}"/>
+  <Color x:Key="Color.Surface.Canvas">#101A23</Color>
+  <SolidColorBrush x:Key="Surface.Canvas" Color="{DynamicResource Color.Surface.Canvas}"/>
+  <Color x:Key="Color.Surface.Card">#172631</Color>
+  <SolidColorBrush x:Key="Surface.Card" Color="{DynamicResource Color.Surface.Card}"/>
+  <Color x:Key="Color.Surface.Card.Hover">#213847</Color>
+  <SolidColorBrush x:Key="Surface.Card.Hover" Color="{DynamicResource Color.Surface.Card.Hover}"/>
+  <Color x:Key="Color.Surface.Card.Selected">#1D3C4D</Color>
+  <SolidColorBrush x:Key="Surface.Card.Selected" Color="{DynamicResource Color.Surface.Card.Selected}"/>
+  <Color x:Key="Color.Surface.Control">#101D28</Color>
+  <SolidColorBrush x:Key="Surface.Control" Color="{DynamicResource Color.Surface.Control}"/>
+  <Color x:Key="Color.Surface.Control.Hover">#263E52</Color>
+  <SolidColorBrush x:Key="Surface.Control.Hover" Color="{DynamicResource Color.Surface.Control.Hover}"/>
+  <Color x:Key="Color.Surface.Disabled">#1A2935</Color>
+  <SolidColorBrush x:Key="Surface.Disabled" Color="{DynamicResource Color.Surface.Disabled}"/>
+  <Color x:Key="Color.Surface.Popup">#142330</Color>
+  <SolidColorBrush x:Key="Surface.Popup" Color="{DynamicResource Color.Surface.Popup}"/>
+  <Color x:Key="Color.Surface.Popup.Hover">#263E52</Color>
+  <SolidColorBrush x:Key="Surface.Popup.Hover" Color="{DynamicResource Color.Surface.Popup.Hover}"/>
+  <Color x:Key="Color.Surface.Popup.Selected">#234754</Color>
+  <SolidColorBrush x:Key="Surface.Popup.Selected" Color="{DynamicResource Color.Surface.Popup.Selected}"/>
+  <Color x:Key="Color.Surface.Button">#23384C</Color>
+  <SolidColorBrush x:Key="Surface.Button" Color="{DynamicResource Color.Surface.Button}"/>
+  <Color x:Key="Color.Surface.Button.Hover">#2C4356</Color>
+  <SolidColorBrush x:Key="Surface.Button.Hover" Color="{DynamicResource Color.Surface.Button.Hover}"/>
+  <Color x:Key="Color.Surface.Button.Pressed">#192C3E</Color>
+  <SolidColorBrush x:Key="Surface.Button.Pressed" Color="{DynamicResource Color.Surface.Button.Pressed}"/>
+  <Color x:Key="Color.Surface.Tag">#223B4B</Color>
+  <SolidColorBrush x:Key="Surface.Tag" Color="{DynamicResource Color.Surface.Tag}"/>
+  <Color x:Key="Color.Surface.Overlay">#152632</Color>
+  <SolidColorBrush x:Key="Surface.Overlay" Color="{DynamicResource Color.Surface.Overlay}"/>
+  <Color x:Key="Color.Surface.View.Application">#193D4B</Color>
+  <SolidColorBrush x:Key="Surface.View.Application" Color="{DynamicResource Color.Surface.View.Application}"/>
+  <Color x:Key="Color.Surface.View.Global">#302E4A</Color>
+  <SolidColorBrush x:Key="Surface.View.Global" Color="{DynamicResource Color.Surface.View.Global}"/>
+  <Color x:Key="Color.Surface.Logo">#D8EEF0</Color>
+  <SolidColorBrush x:Key="Surface.Logo" Color="{DynamicResource Color.Surface.Logo}"/>
+  <Color x:Key="Color.Text.Primary">#F1F5FA</Color>
+  <SolidColorBrush x:Key="Text.Primary" Color="{DynamicResource Color.Text.Primary}"/>
+  <Color x:Key="Color.Text.Secondary">#CBD5E1</Color>
+  <SolidColorBrush x:Key="Text.Secondary" Color="{DynamicResource Color.Text.Secondary}"/>
+  <Color x:Key="Color.Text.Muted">#AABCCC</Color>
+  <SolidColorBrush x:Key="Text.Muted" Color="{DynamicResource Color.Text.Muted}"/>
+  <Color x:Key="Color.Text.Disabled">#AAB5C3</Color>
+  <SolidColorBrush x:Key="Text.Disabled" Color="{DynamicResource Color.Text.Disabled}"/>
+  <Color x:Key="Color.Text.OnAccent">#F8FAFC</Color>
+  <SolidColorBrush x:Key="Text.OnAccent" Color="{DynamicResource Color.Text.OnAccent}"/>
+  <Color x:Key="Color.Text.OnLogo">#136579</Color>
+  <SolidColorBrush x:Key="Text.OnLogo" Color="{DynamicResource Color.Text.OnLogo}"/>
+  <Color x:Key="Color.Border.Default">#365267</Color>
+  <SolidColorBrush x:Key="Border.Default" Color="{DynamicResource Color.Border.Default}"/>
+  <Color x:Key="Color.Border.Control">#58758D</Color>
+  <SolidColorBrush x:Key="Border.Control" Color="{DynamicResource Color.Border.Control}"/>
+  <Color x:Key="Color.Border.Hover">#829DAF</Color>
+  <SolidColorBrush x:Key="Border.Hover" Color="{DynamicResource Color.Border.Hover}"/>
+  <Color x:Key="Color.Border.Focus">#96C2FA</Color>
+  <SolidColorBrush x:Key="Border.Focus" Color="{DynamicResource Color.Border.Focus}"/>
+  <Color x:Key="Color.Border.Disabled">#526779</Color>
+  <SolidColorBrush x:Key="Border.Disabled" Color="{DynamicResource Color.Border.Disabled}"/>
+  <Color x:Key="Color.Border.Separator">#425B70</Color>
+  <SolidColorBrush x:Key="Border.Separator" Color="{DynamicResource Color.Border.Separator}"/>
+  <Color x:Key="Color.Accent.Primary">#2D5FAF</Color>
+  <SolidColorBrush x:Key="Accent.Primary" Color="{DynamicResource Color.Accent.Primary}"/>
+  <Color x:Key="Color.Accent.Primary.Hover">#346DC2</Color>
+  <SolidColorBrush x:Key="Accent.Primary.Hover" Color="{DynamicResource Color.Accent.Primary.Hover}"/>
+  <Color x:Key="Color.Accent.Primary.Pressed">#264F95</Color>
+  <SolidColorBrush x:Key="Accent.Primary.Pressed" Color="{DynamicResource Color.Accent.Primary.Pressed}"/>
+  <Color x:Key="Color.Accent.Output">#6AD2E5</Color>
+  <SolidColorBrush x:Key="Accent.Output" Color="{DynamicResource Color.Accent.Output}"/>
+  <Color x:Key="Color.Accent.Input">#FFD477</Color>
+  <SolidColorBrush x:Key="Accent.Input" Color="{DynamicResource Color.Accent.Input}"/>
+  <Color x:Key="Color.Accent.Success">#64DEB4</Color>
+  <SolidColorBrush x:Key="Accent.Success" Color="{DynamicResource Color.Accent.Success}"/>
+  <Color x:Key="Color.Accent.Error">#FF9CA4</Color>
+  <SolidColorBrush x:Key="Accent.Error" Color="{DynamicResource Color.Accent.Error}"/>
+  <Color x:Key="Color.Accent.Disconnected">#FF6575</Color>
+  <SolidColorBrush x:Key="Accent.Disconnected" Color="{DynamicResource Color.Accent.Disconnected}"/>
+  <Color x:Key="Color.Accent.Global">#D6CFFE</Color>
+  <SolidColorBrush x:Key="Accent.Global" Color="{DynamicResource Color.Accent.Global}"/>
+  <Color x:Key="Color.Glyph.OnAccent">#0B2630</Color>
+  <SolidColorBrush x:Key="Glyph.OnAccent" Color="{DynamicResource Color.Glyph.OnAccent}"/>
+  <Color x:Key="Color.Track.Background">#4B6378</Color>
+  <SolidColorBrush x:Key="Track.Background" Color="{DynamicResource Color.Track.Background}"/>
+  <Color x:Key="Color.Track.Hover">#7490A6</Color>
+  <SolidColorBrush x:Key="Track.Hover" Color="{DynamicResource Color.Track.Hover}"/>
+  <Color x:Key="Color.Connection.Normal">#A6C0D0</Color>
+  <SolidColorBrush x:Key="Connection.Normal" Color="{DynamicResource Color.Connection.Normal}"/>
+  <Color x:Key="Color.Transparent">#00000000</Color>
+  <SolidColorBrush x:Key="Transparent" Color="{DynamicResource Color.Transparent}"/>
+  <FontFamily x:Key="Font.Ui">Segoe UI, Microsoft YaHei UI</FontFamily>
+  <FontFamily x:Key="Font.Mono">Consolas</FontFamily>
+  <sys:Double x:Key="FontSize.Caption">11</sys:Double>
+  <sys:Double x:Key="FontSize.Body">13</sys:Double>
+  <sys:Double x:Key="FontSize.CardTitle">14</sys:Double>
+  <sys:Double x:Key="FontSize.Title">16</sys:Double>
+  <sys:Double x:Key="FontSize.Section">18</sys:Double>
+  <sys:Double x:Key="FontSize.Heading">22</sys:Double>
+  <CornerRadius x:Key="Radius.Window">14</CornerRadius>
+  <CornerRadius x:Key="Radius.Card">18</CornerRadius>
+  <CornerRadius x:Key="Radius.Control">10</CornerRadius>
+  <CornerRadius x:Key="Radius.Menu">12</CornerRadius>
+  <CornerRadius x:Key="Radius.MenuItem">7</CornerRadius>
+  <CornerRadius x:Key="Radius.Tag">6</CornerRadius>
+  <CornerRadius x:Key="Radius.CheckBox">4</CornerRadius>
+  <CornerRadius x:Key="Radius.Thumb">7</CornerRadius>
+  <CornerRadius x:Key="Radius.Track">2</CornerRadius>
+  <CornerRadius x:Key="Radius.Split.Left">10,0,0,10</CornerRadius>
+  <CornerRadius x:Key="Radius.Split.Right">0,10,10,0</CornerRadius>
+</ResourceDictionary>

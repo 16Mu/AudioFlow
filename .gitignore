@@ -1,0 +1,8 @@
+**/bin/
+**/obj/
+.cache/
+dist/
+output/
+.vs/
+*.user
+TestResults/
