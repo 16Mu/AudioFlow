@@ -8,7 +8,7 @@
 
 适用于 **Windows 11，64 位电脑**。声音和设置都留在你的电脑上。
 
-[下载安装版](https://github.com/16Mu/AudioFlow/releases/download/v0.03/AudioFlow-0.03-x64.msi) · [下载免安装版](https://github.com/16Mu/AudioFlow/releases/download/v0.03/AudioFlow-0.03-portable.zip) · [查看全部下载](https://github.com/16Mu/AudioFlow/releases/tag/v0.03)
+[下载安装版](https://github.com/16Mu/AudioFlow/releases/download/v0.0.1/AudioFlow-0.0.1-x64.msi) · [下载免安装版](https://github.com/16Mu/AudioFlow/releases/download/v0.0.1/AudioFlow-0.0.1-portable.zip) · [查看全部下载](https://github.com/16Mu/AudioFlow/releases/tag/v0.0.1)
 
 ## 软件长什么样
 
@@ -29,7 +29,7 @@
 
 ## 下载与打开
 
-当前版本是 [v0.03](https://github.com/16Mu/AudioFlow/releases/tag/v0.03)。
+当前版本是 [v0.0.1](https://github.com/16Mu/AudioFlow/releases/tag/v0.0.1)。
 
 - **安装版**：下载后双击安装包，按提示安装，再从桌面或开始菜单打开“声流 AudioFlow”。
 - **免安装版**：把压缩包里的文件全部解压，打开 portable 文件夹，双击 AudioFlow.exe。
@@ -97,6 +97,6 @@
 
 ## 更多说明
 
-[完整使用说明](docs/使用说明.md) · [更新记录](docs/发布说明.md) · [测试记录](docs/验证报告.md) · [下载源码](https://github.com/16Mu/AudioFlow/releases/download/v0.03/AudioFlow-0.03-source.zip) · [开发与验证](docs/DEVELOPMENT.md)
+[完整使用说明](docs/使用说明.md) · [更新记录](docs/发布说明.md) · [测试记录](docs/验证报告.md) · [下载源码](https://github.com/16Mu/AudioFlow/releases/download/v0.0.1/AudioFlow-0.0.1-source.zip) · [开发与验证](docs/DEVELOPMENT.md)
 
 声流的自有代码采用 [MIT 许可](LICENSE)。第三方软件的许可见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。参考项目：[App Audio Router](https://github.com/Eververdants/AppAudioRouter)。

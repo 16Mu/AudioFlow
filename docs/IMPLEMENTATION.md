@@ -166,3 +166,10 @@ v0.03 的最终实操使用 SimulatedPracticePanel，组件不接收 MainViewMod
 模拟选择、添加、设备选择、拖动和播放完成后开放下一步；跳过始终可用。Unloaded／窗口关闭时停止动画并释放组件自身的鼠标捕获。
 SimulatedPracticeChecks 走实际引导窗口，验证无自动连线、错误拖放不完成、完成／停止／重置及真实路由图不变。
 驱动说明采用两款单装各 1 路、合计 2 路的事实，并解释一份内容可被多个接收软件共享。
+
+## 重新发布为 v0.0.1
+
+2026-11-18 按用户要求将当前 v0.03 功能重发布为 v0.0.1，统一程序集、显示与安装器版本，更新 README 的下载链接。保留仓库代码历史，删除旧 GitHub Release 与旧公开标签。
+已有 MSI 的 MajorUpgrade AllowDowngrades=yes，允许本次数字版本重置后替换旧实验版；本轮未实际执行用户电脑上的安装。
+选择 CodeGraph，当前项目根 E:\Download\待定 返回 Not initialized；补证限于版本、打包与安装器配置，没有初始化索引，也没有调用 Graphify。没有已有受影响索引可维护。
+Assets 仅发布源码 ZIP、便携 ZIP 与 MSI。文档和图片在仓库中提供。

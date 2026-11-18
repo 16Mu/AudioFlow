@@ -9,7 +9,7 @@
     dotnet tool restore
     .\scripts\build.ps1 -Verify
 
-公开版本 v0.03。构建输出为 dist\AudioFlow-0.03：MSI、便携 ZIP、源码 ZIP、使用说明、发布说明与校验文件。
+公开版本 v0.0.1。构建输出为 dist\AudioFlow-0.0.1：MSI、便携 ZIP、源码 ZIP、使用说明、发布说明与校验文件。
 发布为框架依赖的 .NET 10 软件，不在项目内安装运行时副本。
 旧版含 Mode 与两份画布配置的工作区会先保存 workspace.json.pre-migration，再合并为共享配置。
 

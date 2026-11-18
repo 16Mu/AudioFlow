@@ -7,9 +7,9 @@
     <Deterministic>true</Deterministic>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
-    <Version>0.0.3</Version>
-    <InformationalVersion>0.03</InformationalVersion>
-    <ProductDisplayVersion>0.03</ProductDisplayVersion>
+    <Version>0.0.1</Version>
+    <InformationalVersion>0.0.1</InformationalVersion>
+    <ProductDisplayVersion>0.0.1</ProductDisplayVersion>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <Authors>AudioFlow Contributors</Authors>
     <Copyright>Copyright (c) 2026 AudioFlow Contributors</Copyright>
