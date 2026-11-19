@@ -244,14 +244,16 @@ public sealed class ConnectionViewModel(RouteConnection model, PortViewModel sou
     public bool CanRemove => !IsPrimary;
     public bool IsDisconnected => !Model.Enabled || Target.Owner.Model.Key == AudioOutput.None ||
         Target.Owner.SoftwareCard && Target.Owner.Model.InputDeviceKey == AudioOutput.None;
-    public string Description => (Model.Mode == RouteMode.Playback ? $"{Source.Owner.Name} → {Target.Owner.Name}（{(IsPrimary ? "默认原声输出" : "复制声音")}）" : $"{Source.Owner.Name} → {Target.Owner.Name}（声音输入）") + " · " + (Model.Enabled ? VolumeLabel : "已关闭");
+    public string ToggleLabel => Model.Enabled ? "暂停这条连接" : "重新开启";
+    public string ToggleHelp => Source.Owner.IsVirtual ? "暂停后，这个软件暂时不接收声音；需要一个空着的传声音设备。重新开启会用回这个麦克风。" : "暂停后，这条线不再传声音，连线和音量会保留。";
+    public string Description => $"{Source.Owner.Name} → {Target.Owner.Name} · " + (IsDisconnected ? "已暂停" : VolumeLabel) + "。点一下选中，右键可暂停或删除。";
     public void RefreshVolume() { Changed(nameof(Volume)); Changed(nameof(VolumeLabel)); Changed(nameof(Description)); RefreshConnectionState(); }
     private bool? lastDisconnected;
     internal void RefreshConnectionState()
     {
         bool value = IsDisconnected;
         if (lastDisconnected == value) return;
-        lastDisconnected = value; Changed(nameof(IsDisconnected));
+        lastDisconnected = value; Changed(nameof(IsDisconnected)); Changed(nameof(ToggleLabel)); Changed(nameof(Description));
     }
     private bool active;
     public bool Active { get => active; set => Set(ref active, value); }
@@ -329,6 +331,27 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
     public string RunActionLabel => Running ? "停止声音连接" : "开启声音连接";
     public bool CloseToTray { get => graph.CloseToTray; set { graph.CloseToTray = value; Changed(); Edited(false); } }
     public bool ResumeOnLaunch { get => workspace.RestoreRoutingStateOnLaunch; set { workspace.RestoreRoutingStateOnLaunch = value; Changed(); Edited(false); } }
+    private WindowsAutoStart? windowsAutoStart;
+    internal WindowsAutoStart AutoStartRegistration => windowsAutoStart ??= new(Store.DataDirectory);
+    internal void UseAutoStartRegistration(WindowsAutoStart registration) => windowsAutoStart = registration;
+    public bool StartWithWindows
+    {
+        get
+        {
+            try { return AutoStartRegistration.Enabled; }
+            catch (Exception error) { AddLog(error.ToString()); return false; }
+        }
+        set
+        {
+            try
+            {
+                AutoStartRegistration.SetEnabled(value);
+                Notice = value ? "已开启，登录 Windows 后会自动打开声流。" : "已关闭开机启动。";
+            }
+            catch (Exception error) { AddLog(error.ToString()); Notice = "开机启动没能设置好：" + UserError.Describe(error); }
+            Changed();
+        }
+    }
     public ObservableCollection<NodeViewModel> Nodes { get; } = [];
     public ObservableCollection<NodeViewModel> CanvasNodes { get; } = [];
     public ObservableCollection<ConnectionViewModel> Connections { get; } = [];
@@ -851,8 +874,54 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
     public void RemoveConnection(ConnectionViewModel connection)
     {
         if (!connection.CanRemove) { Notice = "这条主要播放的线需要保留。想换耳机，请在它连接的卡片里更换。"; return; }
-        if (!graph.Connections.Remove(connection.Model)) return;
-        RebuildConnections(); BuildCanvas(); Edited(true); Notice = "已断开连接。";
+        ChangeConnection(connection, null);
+    }
+    public void SelectConnection(ConnectionViewModel connection)
+    {
+        SelectedNodes.Clear(); SelectedConnections.Clear();
+        if (CanvasConnections.Contains(connection)) SelectedConnections.Add(connection);
+    }
+    public void SetConnectionEnabled(ConnectionViewModel connection, bool enabled)
+    {
+        if (connection.Model.Enabled == enabled) return;
+        if (connection.IsPrimary)
+        {
+            SetDefaultOutputEnabled(connection.Target.Owner, enabled);
+            var current = CanvasConnections.FirstOrDefault(c => c.IsPrimary && c.Source.Owner == connection.Source.Owner);
+            if (current != null) SelectConnection(current);
+            return;
+        }
+        ChangeConnection(connection, enabled);
+    }
+    private void ChangeConnection(ConnectionViewModel connection, bool? enabled)
+    {
+        var edge = graph.Connections.FirstOrDefault(c => c.Id == connection.Model.Id);
+        if (edge == null) return;
+        var backup = SceneStore.Clone(graph);
+        try
+        {
+            if (connection.Source.Owner.IsVirtual && connection.Target.Owner.SoftwareCard)
+            {
+                var target = connection.Target.Owner;
+                string key = enabled == true ? graph.Channels.First(c => c.Id == connection.Source.Owner.Model.ChannelId).CaptureEndpointId : AudioOutput.None;
+                if (key == AudioOutput.None)
+                {
+                    target.Model.InputDeviceKey ??= target.RecordingKey;
+                    if (target.RecordingKey != AudioOutput.None) target.Model.LastInputDeviceKey = target.RecordingKey;
+                    ReserveQuietInput();
+                }
+                else { target.Model.LastInputDeviceKey = key; target.Model.ChannelId = connection.Source.Owner.Model.ChannelId; target.Model.InputChannelPinned = true; }
+                target.Model.InputDeviceKey = key; target.Model.RecordingConfigured = true;
+                if (!graph.Nodes.Any(n => n.InputDeviceKey == AudioOutput.None)) graph.SilentInputChannelId = null;
+            }
+            if (enabled.HasValue) edge.Enabled = enabled.Value;
+            else graph.Connections.Remove(edge);
+            GraphCompiler.Compile(graph, Catalog.Endpoints);
+            RebuildConnections(); BuildCanvas(); RefreshRunState(); Edited(true);
+            if (enabled.HasValue && CanvasConnections.FirstOrDefault(c => c.Model.Id == edge.Id) is { } current) SelectConnection(current);
+            Notice = !enabled.HasValue ? "这条线已删除。可以点“撤销”找回来。" : enabled.Value ? "这条连接已重新开启。" : "这条连接已暂停，连线和音量已保留。右键可重新开启。";
+        }
+        catch (Exception error) { graph = backup; Rebuild(); Notice = UserError.Describe(error); }
     }
     public PortViewModel StartPendingConnection(PortViewModel port)
     {
@@ -906,12 +975,23 @@ public sealed partial class MainViewModel : Observable, IAsyncDisposable
     }
     private void RebuildConnections()
     {
-        Connections.Clear();
+        var updated = new List<ConnectionViewModel>();
         foreach (var edge in graph.Connections)
         {
             var source = Nodes.FirstOrDefault(n => n.Id == edge.SourceId)?.Outputs.FirstOrDefault();
             var target = Nodes.FirstOrDefault(n => n.Id == edge.TargetId)?.Inputs.FirstOrDefault();
-            if (source != null && target != null) Connections.Add(new(edge, source, target));
+            if (source != null && target != null)
+            {
+                var current = Connections.FirstOrDefault(c => c.Model == edge && c.Source == source && c.Target == target) ?? new(edge, source, target);
+                current.RefreshVolume(); updated.Add(current);
+            }
+        }
+        foreach (var old in Connections.Where(c => !updated.Contains(c)).ToArray()) Connections.Remove(old);
+        for (int i = 0; i < updated.Count; i++)
+        {
+            int current = Connections.IndexOf(updated[i]);
+            if (current < 0) Connections.Insert(i, updated[i]);
+            else if (current != i) Connections.Move(current, i);
         }
         foreach (var node in Nodes)
         {

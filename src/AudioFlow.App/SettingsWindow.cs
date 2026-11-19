@@ -63,6 +63,18 @@ public sealed class SettingsWindow : Window
         var close = new CheckBox { Content = "关闭窗口后继续运行，可从任务栏右下角打开（不勾选时，关闭就退出并恢复声音）", IsChecked = model.CloseToTray };
         close.Checked += (_, _) => model.CloseToTray = true; close.Unchecked += (_, _) => model.CloseToTray = false;
         panel.Children.Add(close);
+        var startup = new CheckBox { Name = "StartWithWindows", Content = "开机后自动打开声流", IsChecked = model.StartWithWindows };
+        bool changingStartup = false;
+        void ChangeStartup(bool enabled)
+        {
+            if (changingStartup) return;
+            model.StartWithWindows = enabled;
+            changingStartup = true; startup.IsChecked = model.StartWithWindows; changingStartup = false;
+        }
+        startup.Checked += (_, _) => ChangeStartup(true); startup.Unchecked += (_, _) => ChangeStartup(false);
+        panel.Children.Add(startup);
+        var startupHint = GuideUi.Text("登录 Windows 后自动打开。勾选下面的选项，还能接着使用上次的连接与开启／停止状态。", "Caption", "Text.Muted");
+        startupHint.Margin = new(23, 2, 0, 9); panel.Children.Add(startupHint);
         var resume = new CheckBox { Content = "下次打开声流，接着用上次的设置", IsChecked = model.ResumeOnLaunch };
         resume.Checked += (_, _) => model.ResumeOnLaunch = true; resume.Unchecked += (_, _) => model.ResumeOnLaunch = false;
         panel.Children.Add(resume);

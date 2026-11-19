@@ -18,6 +18,8 @@ public sealed class FlowConnection : Connection
     public bool IsDisconnected { get => (bool)GetValue(IsDisconnectedProperty); set => SetValue(IsDisconnectedProperty, value); }
     public static readonly DependencyProperty IsFlowingProperty = DependencyProperty.Register(nameof(IsFlowing), typeof(bool), typeof(FlowConnection), new PropertyMetadata(false, Refresh));
     public static readonly DependencyProperty HasSignalProperty = DependencyProperty.Register(nameof(HasSignal), typeof(bool), typeof(FlowConnection), new PropertyMetadata(false, Refresh));
+    public static readonly DependencyProperty IsHighlightedProperty = DependencyProperty.Register(nameof(IsHighlighted), typeof(bool), typeof(FlowConnection), new PropertyMetadata(false, Refresh));
+    public bool IsHighlighted { get => (bool)GetValue(IsHighlightedProperty); set => SetValue(IsHighlightedProperty, value); }
     public bool IsFlowing { get => (bool)GetValue(IsFlowingProperty); set => SetValue(IsFlowingProperty, value); }
     public bool HasSignal { get => (bool)GetValue(HasSignalProperty); set => SetValue(HasSignalProperty, value); }
     public FlowConnection()
@@ -28,13 +30,14 @@ public sealed class FlowConnection : Connection
     private void UpdateFlow()
     {
         StrokeDashArray = IsDisconnected ? DisconnectedDashes : null;
-        if (!IsLoaded || !IsVisible || !IsFlowing || IsDisconnected) { Detach(); Opacity = IsDisconnected ? 1 : .35; DirectionalArrowsCount = 0; InvalidateVisual(); return; }
+        StrokeThickness = IsHighlighted ? 5.2 : IsFlowing && HasSignal ? 3.2 : 2.8;
+        if (!IsLoaded || !IsVisible || !IsFlowing || IsDisconnected) { Detach(); Opacity = IsHighlighted || IsDisconnected ? 1 : .35; DirectionalArrowsCount = 0; InvalidateVisual(); return; }
         if (!registered)
         {
             registered = true;
             if (runningConnections++ == 0) { IdleClock.Controller!.Begin(); SignalClock.Controller!.Begin(); }
         }
-        DirectionalArrowsCount = 2; Opacity = HasSignal ? 1 : .5; StrokeThickness = HasSignal ? 3.2 : 2.4;
+        DirectionalArrowsCount = 2; Opacity = IsHighlighted || HasSignal ? 1 : .5;
         ApplyAnimationClock(DirectionalArrowsOffsetProperty, HasSignal ? SignalClock : IdleClock);
     }
     private void Detach()

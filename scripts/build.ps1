@@ -10,6 +10,8 @@ Push-Location -LiteralPath $audioProjectRoot
 try {
     vsm current
     dotnet tool restore
+    dotnet wix extension add -g WixToolset.UI.wixext/5.0.2
+    if ($LASTEXITCODE -ne 0) { throw 'Installer UI extension restore failed.' }
     dotnet build src/AudioFlow.App/AudioFlow.App.csproj -c Release -r win-x64 --nologo
     if ($LASTEXITCODE -ne 0) { throw 'Application build failed.' }
     if ($Verify) {
@@ -27,7 +29,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Publish failed.' }
     Copy-Item -LiteralPath 'docs\使用说明.md' -Destination $audioPublishDirectory -Force
     Copy-Item -LiteralPath 'THIRD_PARTY_NOTICES.md' -Destination $audioPublishDirectory -Force
-    dotnet wix build installer/AudioFlow.wxs -arch x64 -d "ProjectRoot=$audioProjectRoot" -d "PublishDir=$audioPublishDirectory" -d "ReleaseVersion=$audioReleaseVersion" -pdbtype none -out (Join-Path $audioReleaseDirectory ('AudioFlow-' + $audioDisplayVersion + '-x64.msi'))
+    dotnet wix build installer/AudioFlow.wxs -ext WixToolset.UI.wixext -culture zh-CN -arch x64 -d "ProjectRoot=$audioProjectRoot" -d "PublishDir=$audioPublishDirectory" -d "ReleaseVersion=$audioReleaseVersion" -pdbtype none -out (Join-Path $audioReleaseDirectory ('AudioFlow-' + $audioDisplayVersion + '-x64.msi'))
     if ($LASTEXITCODE -ne 0) { throw 'MSI build failed.' }
     Compress-Archive -LiteralPath $audioPublishDirectory -DestinationPath (Join-Path $audioReleaseDirectory ('AudioFlow-' + $audioDisplayVersion + '-portable.zip')) -Force
     Copy-Item -LiteralPath 'docs\使用说明.md' -Destination $audioReleaseDirectory -Force

@@ -17,6 +17,7 @@ public partial class MainWindow : Window
     private bool closing;
     private bool shutdownReady;
     private readonly bool verification;
+    private bool initialized;
     public MainWindow(string? dataDirectory = null, bool verification = false)
     {
         this.verification = verification;
@@ -39,18 +40,20 @@ public partial class MainWindow : Window
         if (File.Exists(iconPath)) Icon = BitmapFrame.Create(new Uri(iconPath));
         Loaded += async (_, _) =>
         {
-            if (verification) return;
+            if (verification || initialized) return;
+            initialized = true;
             tray = new(this);
             await ViewModel.InitializeAsync();
-            if (!closing && IsVisible) ShowFirstRunGuide();
         };
     }
     internal bool ShowFirstRunGuide(Action<GettingStartedWindow>? prepare = null, Action<Uri>? openLink = null, Func<Window?, string>? installDriver = null)
     {
         if (!new GettingStartedState(ViewModel.Store.DataDirectory).NeedsGuide) return false;
-        var guide = new GettingStartedWindow(ViewModel, openLink, installDriver) { Owner = this };
-        prepare?.Invoke(guide);
-        guide.ShowDialog();
+        bool restoreMain = IsVisible;
+        if (restoreMain) Hide();
+        var guide = new GettingStartedWindow(ViewModel, openLink, installDriver) { WindowStartupLocation = WindowStartupLocation.CenterScreen };
+        try { prepare?.Invoke(guide); guide.ShowDialog(); }
+        finally { if (restoreMain && !closing) Show(); }
         return true;
     }
     private LayoutCard MeasureLayoutCard(NodeViewModel node)
@@ -102,7 +105,7 @@ public partial class MainWindow : Window
     private void RouteRowSelected(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
         if ((sender as FrameworkElement)?.DataContext is RouteLevelViewModel row)
-        { ViewModel.SelectedConnections.Clear(); ViewModel.SelectedConnections.Add(row.Connection); }
+            ViewModel.SelectConnection(row.Connection);
         e.Handled = true;
     }
     private void PortConnectionCompleted(object sender, PendingConnectionEventArgs e)
@@ -116,8 +119,26 @@ public partial class MainWindow : Window
     }
     private void ConnectionMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
-        if (e.ClickCount == 2 && (sender as FrameworkElement)?.DataContext is ConnectionViewModel connection)
-        { ViewModel.RemoveConnection(connection); e.Handled = true; }
+        if ((sender as FrameworkElement)?.DataContext is not ConnectionViewModel connection) return;
+        if (e.ClickCount == 2) ViewModel.RemoveConnection(connection);
+        else ViewModel.SelectConnection(connection);
+        e.Handled = true;
+    }
+    private void ConnectionMouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is ConnectionViewModel connection) ViewModel.SelectConnection(connection);
+    }
+    private void ConnectionContextMenuOpening(object sender, ContextMenuEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is ConnectionViewModel connection) ViewModel.SelectConnection(connection);
+    }
+    private void ToggleConnectionContext(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is ConnectionViewModel connection) ViewModel.SetConnectionEnabled(connection, !connection.Model.Enabled);
+    }
+    private void DeleteConnectionContext(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is ConnectionViewModel connection) ViewModel.RemoveConnection(connection);
     }
     public void ShowFromTray() { Show(); WindowState = WindowState.Normal; Activate(); }
     public void RequestExit() { exit = true; Close(); }

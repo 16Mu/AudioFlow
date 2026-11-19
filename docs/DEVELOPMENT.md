@@ -28,6 +28,10 @@
 
     .\src\AudioFlow.App\bin\Release\net10.0-windows10.0.22000.0\win-x64\AudioFlow.exe --verify-onboarding .cache\onboarding-check
     .\src\AudioFlow.App\bin\Release\net10.0-windows10.0.22000.0\win-x64\AudioFlow.exe --verify-settings .cache\settings-check
+    .\src\AudioFlow.App\bin\Release\net10.0-windows10.0.22000.0\win-x64\AudioFlow.exe --verify-startup-features .cache\startup-check
+    .\src\AudioFlow.App\bin\Release\net10.0-windows10.0.22000.0\win-x64\AudioFlow.exe --verify-connections .cache\connection-check
+
+新增检查覆盖真实设置开关、Windows 启动命令的路径解析、引导与主窗口的显示顺序，以及线条的点选、右键、暂停、恢复、删除、撤销与保存。自启动检查使用隔离的测试注册表位置，不修改用户的真实开机启动项；连线检查编译声音计划，不开启真实声音。
 
 界面验证使用 --verify-ui <报告目录>，会启动自有测试音程序并走实际退出与还原流程，
 同时验证已关闭应用重开、无音频会话时保留恢复记录及退出后的恢复助手。

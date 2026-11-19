@@ -65,6 +65,7 @@ internal static class GettingStartedChecks
             bool appeared = main.ShowFirstRunGuide(guide => Prepare(guide, current =>
             {
                 Check(current.Step == 0, "the desktop first-run entry starts with the product introduction");
+                Check(!main.IsVisible && current.IsVisible, "only the introduction is visible until the user finishes or skips it");
                 UiChecks.SavePreview(current, Path.Combine(directory, "guide-01-welcome.png"), 1040, 740);
                 Click(current, "GuideNext");
                 Check(current.Step == 1 && Children(current).OfType<SimulatedPracticePanel>().Any() && !((Button)current.FindName("GuideNext")).IsEnabled,

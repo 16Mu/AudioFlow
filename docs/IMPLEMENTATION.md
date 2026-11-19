@@ -173,3 +173,22 @@ SimulatedPracticeChecks 走实际引导窗口，验证无自动连线、错误�
 已有 MSI 的 MajorUpgrade AllowDowngrades=yes，允许本次数字版本重置后替换旧实验版；本轮未实际执行用户电脑上的安装。
 选择 CodeGraph，当前项目根 E:\Download\待定 返回 Not initialized；补证限于版本、打包与安装器配置，没有初始化索引，也没有调用 Graphify。没有已有受影响索引可维护。
 Assets 仅发布源码 ZIP、便携 ZIP 与 MSI。文档和图片在仓库中提供。
+
+## 安装向导修复（2026-11-19）
+
+旧 MSI 只有成本计算和执行序列，没有 Dialog 表，所以默认双击只显示短暂进度。日志中旧安装返回状态 0，安装目录中的程序仍显示 0.01。
+为当前 0.0.1 安装包接入 WixToolset.UI.wixext/5.0.2 与中文 WixUI_InstallDir，提供欢迎、许可、路径、准备安装、进度和完成页面。
+结束页面的可选启动通过已安装文件 FileRef 执行，默认勾选；取消勾选则只完成安装。安装路径写入 ARPINSTALLLOCATION 由 CostFinalize 后的 SetProperty 完成。
+构建脚本自动恢复 UI 扩展并指定 zh-CN，许可证使用仓库 MIT 文本生成的 RTF。版本与用户音频配置格式没有改变。
+本轮选择 CodeGraph，当前项目根未初始化；补证限于安装器、构建脚本和 MSI 表。未初始化图谱或调用 Graphify，也没有可同步的已有受影响索引。
+
+## 自启动、引导顺序与连线操作（2026-11-19）
+
+WindowsAutoStart 使用当前用户 Run 项，由设置开关显式开启，默认关闭。命令记录当前程序绝对路径与数据目录，按 Windows 规则引用含空格和结尾反斜杠的路径；已启用时下一次运行更新移动后的程序位置。重复自启动不弹重复运行提示。
+App 在第一次 Show 主窗口之前刷新设备目录并单独显示 GettingStartedWindow。完成或跳过后才 Show MainWindow，Loaded 中开始恢复与上次状态初始化，避免引导期间主界面与真实音频同时启动。
+FlowConnection 显式启用 Nodify 的 BaseConnection.IsSelectable，以附加 IsSelected 驱动亮色和粗线显示。流动动画更新保留高亮，停止和暂停时仍可选中。自定义线条菜单阻止空白画布菜单代替线条菜单，删除保护在菜单内说明。
+暂停普通连接修改已有 Enabled 字段，参与现有自动保存、实时应用、撤销和恢复。主要播放暂停复用原有设备开关，重新开启恢复 LastOutputKey。虚拟麦克风到软件的连接通过原有静音设备预留机制停止该接收软件；无空闲设备时回滚并说明，避免只改画线但仍让它收到声音。
+重建连线时复用 Model 与两端未变的 ViewModel，避免暂停操作更换所有模板而丢失选择和右键菜单。导入／撤销仍根据新图重建。
+StartupFeatureChecks 使用独立临时 HKCU 测试项与真实设置开关，检查路径解析、仅引导可见与后续主窗口显示。ConnectionInteractionChecks 走真实 WPF 线条和菜单，检查高亮、暂停、编译计划、保存、恢复、删除、撤销与无空闲设备回滚，未开启真实声音。
+用户自行完成新版向导安装，MSI 日志返回 0；所选 E:\Apps\AudioFlow.exe 与当时发布文件 SHA256 一致。后续功能随重新打包提供，不自行替用户点击安装。
+本轮再次选择 CodeGraph，2026-11-19 对当前根目录 status 返回 Not initialized。没有现有覆盖可用，补证限于上述调用链和 Nodify 本地 API 文档；未初始化、未调用 Graphify，没有已有受影响索引可维护。

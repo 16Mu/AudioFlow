@@ -9,9 +9,17 @@ namespace AudioFlow.App;
 public partial class App : Application
 {
     private Mutex? instance;
-    protected override void OnStartup(StartupEventArgs e)
+    protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        if (e.Args.Length == 2 && e.Args[0] == "--verify-connections")
+        {
+            _ = VerifyConnectionsAsync(e.Args[1]); return;
+        }
+        if (e.Args.Length == 2 && e.Args[0] == "--verify-startup-features")
+        {
+            _ = VerifyStartupFeaturesAsync(e.Args[1]); return;
+        }
         if (e.Args.Length == 2 && e.Args[0] == "--verify-practice")
         {
             _ = VerifyPracticeAsync(e.Args[1]); return;
@@ -50,17 +58,33 @@ public partial class App : Application
             return;
         }
         instance = new Mutex(true, "Local\\AudioFlow.Desktop", out bool first);
-        if (!first) { MessageBox.Show("声流已经打开了。点击任务栏右下角的声流图标，就能回到窗口。", "声流"); Shutdown(); return; }
+        if (!first)
+        {
+            if (!e.Args.Contains("--autostart")) MessageBox.Show("声流已经打开了。点击任务栏右下角的声流图标，就能回到窗口。", "声流");
+            Shutdown(); return;
+        }
         string? directory = null;
         for (int i = 0; i < e.Args.Length - 1; i++) if (e.Args[i] == "--data-dir") directory = e.Args[i + 1];
         var window = new MainWindow(directory);
         MainWindow = window;
-        window.Show();
         DispatcherUnhandledException += (_, args) =>
         {
             try { File.AppendAllText(Path.Combine(window.ViewModel.Store.DataDirectory, "errors.log"), DateTime.Now + " " + args.Exception + Environment.NewLine); } catch { }
             window.ViewModel.Notify("操作未完成：" + UserError.Describe(args.Exception)); args.Handled = true;
         };
+        try { window.ViewModel.AutoStartRegistration.RefreshPathIfEnabled(); }
+        catch (Exception error) { window.ViewModel.AddLog(error.ToString()); window.ViewModel.Notify("开机启动的位置没能更新：" + UserError.Describe(error)); }
+        try { await ShowInitialWindowAsync(window); }
+        catch (Exception error) { window.ViewModel.AddLog(error.ToString()); window.Show(); window.ViewModel.Notify("启动准备没有完成：" + UserError.Describe(error)); }
+    }
+    internal static async Task ShowInitialWindowAsync(MainWindow window, Action<GettingStartedWindow>? prepare = null)
+    {
+        if (new GettingStartedState(window.ViewModel.Store.DataDirectory).NeedsGuide)
+        {
+            await window.ViewModel.RefreshCatalogAsync();
+            window.ShowFirstRunGuide(prepare);
+        }
+        window.Show();
     }
     protected override void OnExit(ExitEventArgs e) { instance?.Dispose(); base.OnExit(e); }
     private async Task RecoverPendingAsync(string directory, int parentId)
@@ -102,6 +126,16 @@ public partial class App : Application
     {
         try { await SimulatedPracticeChecks.RunAsync(directory); Shutdown(0); }
         catch (Exception error) { Directory.CreateDirectory(directory); File.WriteAllText(Path.Combine(directory, "practice-error.log"), error.ToString()); Shutdown(1); }
+    }
+    private async Task VerifyStartupFeaturesAsync(string directory)
+    {
+        try { await StartupFeatureChecks.RunAsync(directory); Shutdown(0); }
+        catch (Exception error) { Directory.CreateDirectory(directory); File.WriteAllText(Path.Combine(directory, "startup-feature-error.log"), error.ToString()); Shutdown(1); }
+    }
+    private async Task VerifyConnectionsAsync(string directory)
+    {
+        try { await ConnectionInteractionChecks.RunAsync(directory); Shutdown(0); }
+        catch (Exception error) { Directory.CreateDirectory(directory); File.WriteAllText(Path.Combine(directory, "connection-error.log"), error.ToString()); Shutdown(1); }
     }
     private async Task VerifyStartupAsync(string directory, string report)
     {

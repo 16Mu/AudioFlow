@@ -1,9 +1,20 @@
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
   <Package Name="声流 AudioFlow" Manufacturer="AudioFlow Contributors" Version="$(var.ReleaseVersion)" UpgradeCode="23066380-03F2-477F-9814-DF0292C13207" Scope="perUser" Language="2052" Codepage="936">
     <MajorUpgrade AllowDowngrades="yes" />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
     <Icon Id="AudioFlowIcon" SourceFile="$(var.ProjectRoot)\src\AudioFlow.App\Assets\app.ico" />
     <Property Id="ARPPRODUCTICON" Value="AudioFlowIcon" />
+    <SetProperty Id="ARPINSTALLLOCATION" Value="[INSTALLFOLDER]" After="CostFinalize" Sequence="execute" />
+    <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.ProjectRoot)\installer\License.rtf" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="声流已经装好。可以从桌面或开始菜单打开，也可以勾选下面的选项立即启动。" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="立即打开声流 AudioFlow" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+    <CustomAction Id="LaunchAudioFlow" FileRef="AudioFlowExe" ExeCommand="" Return="asyncNoWait" Impersonate="yes" />
+    <UI>
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchAudioFlow"
+               Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed" Order="1" />
+    </UI>
     <StandardDirectory Id="LocalAppDataFolder">
       <Directory Id="UserPrograms" Name="Programs"><Directory Id="INSTALLFOLDER" Name="AudioFlow">
         <Component Id="ApplicationFiles" Guid="A79620E9-87F7-40B9-86B0-EAB9DF1BD382">
